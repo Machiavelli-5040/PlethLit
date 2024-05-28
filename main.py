@@ -33,25 +33,29 @@ SAMPFREQ = st.sidebar.number_input("Sampling frequency", step=100, value=2000)
 if st.sidebar.checkbox("Advanced parameters"):
     number = st.sidebar.number_input("test")
 
-pipe = Pipeline(
-    SAMPFREQ,
-    PROMINENCE,
-    WLEN,
-    MIN_CYCLE,
-    MAX_CYCLE,
-    TRAINING_SIZE,
-    INTERVAL,
-    N_IN_CLUSTER,
-    IN_D,
-    N_OUT_CLUSTER,
-    OUT_D,
-    DOWN_SAMPFREQ,
-    MAX_WARPING,
-    N_ITER,
-    QUANTILE,
-    NJOBS,
-    VERBOSE,
-)
-
-if zip_file is not None:
-    pipe.fit(file_array)
+if st.sidebar.button("Run"):
+    if zip_file is None:
+        st.write("you have to enter a file first")
+    else:
+        pipe = Pipeline(
+            SAMPFREQ,
+            PROMINENCE,
+            WLEN,
+            MIN_CYCLE,
+            MAX_CYCLE,
+            TRAINING_SIZE,
+            INTERVAL,
+            N_IN_CLUSTER,
+            IN_D,
+            N_OUT_CLUSTER,
+            OUT_D,
+            DOWN_SAMPFREQ,
+            MAX_WARPING,
+            N_ITER,
+            QUANTILE,
+            NJOBS,
+            VERBOSE,
+        )
+        pipe.fit(file_array)
+        fig = pipe.plot_medoid()
+        st.write(fig)
