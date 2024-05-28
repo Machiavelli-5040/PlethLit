@@ -7,9 +7,9 @@ import streamlit as st
 from tools.pipeline import Pipeline
 from upload_data.data import from_zip_dataset_to_numpy
 
-zip_file = zipfile.ZipFile(st.file_uploader("Upload a zip file", type="zip"), "r")
+zip_file = st.file_uploader("Upload a zip file", type="zip")
 if zip_file is not None:
-    file_array = from_zip_dataset_to_numpy(zip_file)
+    file_array = from_zip_dataset_to_numpy(zipfile.ZipFile(zip_file, "r"))
 
 DOWN_SAMPFREQ = 250
 PROMINENCE = 0.03
