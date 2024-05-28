@@ -1,1 +1,0 @@
-Sampling Frequency : 2000Hz

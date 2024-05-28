@@ -23,6 +23,7 @@ def from_zip_dataset_to_numpy(_zp: ZipFile) -> np.ndarray:
     """
 
     # Select filename with the right extention and take out the mac extension
+    extract_dir = f"datasets/{_zp.filename[:-4]}/"
     extension_lst = [".txt", ".csv", ".EDF"]
     mac_sub_dir = "__MACOSX"
     file_to_check = [
@@ -43,11 +44,15 @@ def from_zip_dataset_to_numpy(_zp: ZipFile) -> np.ndarray:
         try:
             if filename[-4:] == ".EDF":
                 signal = (
-                    pyedflib.EdfReader(_zp.extract(filename)).readSignal(0).reshape(-1)
+                    pyedflib.EdfReader(_zp.extract(filename, extract_dir))
+                    .readSignal(0)
+                    .reshape(-1)
                 )
                 lst.append(signal)
             else:
-                signal = pd.read_csv(_zp.extract(filename), header=None).values
+                signal = pd.read_csv(
+                    _zp.extract(filename, extract_dir), header=None
+                ).values
                 if signal.ndim == 2:
                     signal = signal.reshape(-1)
                     lst.append(signal)
