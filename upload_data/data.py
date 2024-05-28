@@ -8,7 +8,7 @@ import streamlit as st
 
 
 @st.cache_data
-def from_zip_dataset_to_numpy(zp: ZipFile) -> np.ndarray:
+def from_zip_dataset_to_numpy(_zp: ZipFile) -> np.ndarray:
     """Take a dataset
 
     Args:
@@ -26,7 +26,7 @@ def from_zip_dataset_to_numpy(zp: ZipFile) -> np.ndarray:
     extension_lst = [".txt", ".csv", ".EDF"]
     mac_sub_dir = "__MACOSX"
     file_to_check = [
-        filename for filename in zp.namelist() if filename[-4:] in extension_lst
+        filename for filename in _zp.namelist() if filename[-4:] in extension_lst
     ]
     file_to_check = [
         filename for filename in file_to_check if mac_sub_dir not in filename
@@ -43,11 +43,11 @@ def from_zip_dataset_to_numpy(zp: ZipFile) -> np.ndarray:
         try:
             if filename[-4:] == ".EDF":
                 signal = (
-                    pyedflib.EdfReader(zp.extract(filename)).readSignal(0).reshape(-1)
+                    pyedflib.EdfReader(_zp.extract(filename)).readSignal(0).reshape(-1)
                 )
                 lst.append(signal)
             else:
-                signal = pd.read_csv(zp.extract(filename), header=None).values
+                signal = pd.read_csv(_zp.extract(filename), header=None).values
                 if signal.ndim == 2:
                     signal = signal.reshape(-1)
                     lst.append(signal)
