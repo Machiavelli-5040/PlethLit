@@ -50,5 +50,5 @@ pipe = Pipeline(
     NJOBS,
     VERBOSE,
 )
-if file_array is not None:
+if zip_file is not None:
     pipe.fit(file_array)
