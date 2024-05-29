@@ -20,15 +20,20 @@ if zip_file is not None:
     file_array = from_zip_dataset_to_numpy(zip_file)
 
     labels_df = st.sidebar.file_uploader(
-        "Upload a csv file with your labels to access visualization by label",
+        "Upload a csv file with your labels to access advanced visualization",
         type="csv",
     )
     if labels_df is not None:
         labels_df = pd.read_csv(labels_df)
+        # Remove eventual manual index column
+        labels_df = labels_df.drop(["Unnamed: 0"], axis=1, errors="ignore")
+
         dict_labels = {}
         for col in labels_df.columns:
             dict_labels[col] = list(labels_df[col].unique())
-        st.write(dict_labels)
+
+        if set(zip_file.namelist()) != set(dict_labels["filename"]):
+            st.write("WARNING: Filenames in the zip and in the csv do not match")
 
 # Parameters
 
@@ -39,9 +44,8 @@ form.write("Choose Parameters")
 SAMPFREQ = form.number_input("Sampling frequency", step=100, value=2000)
 N_CLUSTER = form.slider("Number of clusters", min_value=1, max_value=5, value=3)
 N_IN_CLUSTER = N_OUT_CLUSTER = N_CLUSTER
-# if st.sidebar.checkbox("Advanced parameters"):
 
-# advanced parameters
+# Advanced parameters
 expander = form.expander("Advanced parameters")
 DOWN_SAMPFREQ = expander.number_input("Downsampling frequency", step=50, value=250)
 PROMINENCE = expander.number_input("Prominence", step=0.01, value=0.03)
@@ -60,6 +64,7 @@ QUANTILE = expander.number_input(
     "quantile", step=0.01, value=0.95, min_value=0.0, max_value=1.0
 )
 apply_params = form.form_submit_button("Apply parameters")
+
 # Run experiment
 
 st.write(
@@ -83,24 +88,28 @@ st.write(
 )
 if zip_file is not None:
     if labels_df is None:
-        st.subheader("Display datas")
-        st.write("Enter a csv file to access advanced research parameters")
-        number_of_files = file_array.size
+        st.subheader("Display data")
         signal_idx = st.selectbox(
-            "Choose the signal you want to display", np.arange(number_of_files)
+            "Choose the signal you want to display",
+            list(range(file_array.size)),
+            format_func=lambda i: zip_file.namelist()[i],
         )
-        # downsampling of the TS
+        # Downsampling of the TS
         freq_ratio_ = SAMPFREQ // DOWN_SAMPFREQ
         considered_ts = file_array[signal_idx][::freq_ratio_]
         fig = go.Figure()
         fig.add_trace(
             go.Scatter(x=list(range(considered_ts.shape[0])), y=considered_ts)
         )
-
-        # Set title
-        fig.update_layout(title_text="Time series number " + " " + str(signal_idx))
-
         st.plotly_chart(fig)
+
+    else:
+        st.subheader("Display data with specific labels")
+        for param_name in labels_df.columns[1:]:
+            st.selectbox(
+                f"{param_name}",
+                dict_labels[param_name],
+            )
 
 if st.sidebar.button("Run"):
     if zip_file is None:

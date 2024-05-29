@@ -4,6 +4,6 @@ __pycache__/
 *.so
 .DS_Store
 
-datasets/**/*.csv
-datasets/**/*.EDF
-datasets/**/*.txt
+datasets/*/*.csv
+datasets/*/*.EDF
+datasets/*/*.txt
