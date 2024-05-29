@@ -32,47 +32,38 @@ if zip_file is not None:
 
 # Parameters
 
-DOWN_SAMPFREQ = 250
-PROMINENCE = 0.03
-WLEN = 2
-MIN_CYCLE = 0.1
-MAX_CYCLE = 0.3
-TRAINING_SIZE = 30
-INTERVAL = 60
-IN_D = 0.2
-OUT_D = 0.2
-N_ITER = 10
-MAX_WARPING = 0.06
-QUANTILE = 0.95
 NJOBS = 1
 VERBOSE = True
-
-SAMPFREQ = st.sidebar.number_input("Sampling frequency", step=100, value=2000)
-N_CLUSTER = st.sidebar.slider("Number of clusters", min_value=1, max_value=5, value=3)
+form = st.sidebar.form("Choose parameters", clear_on_submit=True)
+form.write("Choose Parameters")
+SAMPFREQ = form.number_input("Sampling frequency", step=100, value=2000)
+N_CLUSTER = form.slider("Number of clusters", min_value=1, max_value=5, value=3)
 N_IN_CLUSTER = N_OUT_CLUSTER = N_CLUSTER
-if st.sidebar.checkbox("Advanced parameters"):
-    DOWN_SAMPFREQ = st.sidebar.number_input(
-        "Downsampling frequency", step=50, value=250
-    )
-    PROMINENCE = st.sidebar.number_input("Prominence", step=0.01, value=0.03)
-    WLEN = st.sidebar.number_input("Wlen", step=1, value=2)
-    MIN_CYCLE = st.sidebar.number_input("Min_cycle", step=0.1, value=0.1)
-    MAX_CYCLE = st.sidebar.number_input("Max_cycle", step=0.1, value=0.3)
-    TRAINING_SIZE = st.sidebar.number_input("Training size", step=1, value=30)
-    INTERVAL = st.sidebar.number_input("Interval", step=1, value=60)
-    IN_D = st.sidebar.number_input("IN_D", step=0.1, value=0.2)
-    OUT_D = st.sidebar.number_input("OUT_D", step=0.1, value=0.2)
-    N_ITER = st.sidebar.number_input("nb_iter", step=1, value=10)
-    MAX_WARPING = st.sidebar.number_input(
-        "max_warping", step=0.01, value=0.06, min_value=0.0, max_value=1.0
-    )
-    QUANTILE = st.sidebar.number_input(
-        "quantile", step=0.1, value=0.95, min_value=0.0, max_value=1.0
-    )
+# if st.sidebar.checkbox("Advanced parameters"):
+
+# advanced parameters
+expander = form.expander("Advanced parameters")
+DOWN_SAMPFREQ = expander.number_input("Downsampling frequency", step=50, value=250)
+PROMINENCE = expander.number_input("Prominence", step=0.01, value=0.03)
+WLEN = expander.number_input("Wlen", step=1, value=2)
+MIN_CYCLE = expander.number_input("Min_cycle", step=0.1, value=0.1)
+MAX_CYCLE = expander.number_input("Max_cycle", step=0.1, value=0.3)
+TRAINING_SIZE = expander.number_input("Training size", step=1, value=30)
+INTERVAL = expander.number_input("Interval", step=1, value=60)
+IN_D = expander.number_input("IN_D", step=0.1, value=0.2)
+OUT_D = expander.number_input("OUT_D", step=0.1, value=0.2)
+N_ITER = expander.number_input("nb_iter", step=1, value=10)
+MAX_WARPING = expander.number_input(
+    "max_warping", step=0.01, value=0.06, min_value=0.0, max_value=1.0
+)
+QUANTILE = expander.number_input(
+    "quantile", step=0.01, value=0.95, min_value=0.0, max_value=1.0
+)
+reset = form.form_submit_button("Reset parameters to default")
 # Run experiment
 
 if zip_file is not None:
-    if labels_file is None:
+    if labels_df is None:
         st.subheader("Display datas")
         st.write("Enter a csv file to access advanced research parameters")
         number_of_files = file_array.size
