@@ -12,12 +12,22 @@ st.title(
     "Unsupervised classification of plethysmography signals with advanced visual representations - A demonstration."
 )
 
+# Inputs
+
 zip_file = st.sidebar.file_uploader("Upload a zip file", type="zip")
 if zip_file is not None:
-    file_array = from_zip_dataset_to_numpy(zipfile.ZipFile(zip_file, "r"))
+    zip_file = zipfile.ZipFile(zip_file, "r")
+    file_array = from_zip_dataset_to_numpy(zip_file)
 
-labels_file = st.sidebar.file_uploader("Upload a csv file of the labels", type="csv")
+    labels_file = st.sidebar.file_uploader(
+        "Upload a csv file with your labels to access visualization by label",
+        type="csv",
+    )
+    if labels_file is not None:
+        labels_file = pd.read_csv(labels_file)
+        number_of_files = file_array.size
 
+# Parameters
 
 DOWN_SAMPFREQ = 250
 PROMINENCE = 0.03
@@ -43,6 +53,8 @@ if st.sidebar.checkbox("Advanced parameters"):
     )
     PROMINENCE = st.sidebar.number_input("Prominence", step=0.01, value=0.03)
 
+# Run experiment
+
 if zip_file is not None:
     if labels_file is None:
         st.write("Enter a csv file if you want to be able to characterise your files")
@@ -61,9 +73,9 @@ if zip_file is not None:
 
         st.plotly_chart(fig)
 
-if st.button("Run"):
+if st.sidebar.button("Run"):
     if zip_file is None:
-        st.write("You have to enter a file first")
+        st.sidebar.write("Please input a zip archive first")
     else:
         pipe = Pipeline(
             SAMPFREQ,
