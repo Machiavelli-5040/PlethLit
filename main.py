@@ -42,12 +42,12 @@ VERBOSE = True
 form = st.sidebar.form("Choose parameters")
 form.write("Choose Parameters")
 SAMPFREQ = form.number_input("Sampling frequency", step=100, value=2000)
+DOWN_SAMPFREQ = form.number_input("Downsampling frequency", step=50, value=250)
 N_CLUSTER = form.slider("Number of clusters", min_value=1, max_value=5, value=3)
 N_IN_CLUSTER = N_OUT_CLUSTER = N_CLUSTER
 
 # Advanced parameters
 expander = form.expander("Advanced parameters")
-DOWN_SAMPFREQ = expander.number_input("Downsampling frequency", step=50, value=250)
 PROMINENCE = expander.number_input("Prominence", step=0.01, value=0.03)
 WLEN = expander.number_input("Wlen", step=1, value=2)
 MIN_CYCLE = expander.number_input("Min_cycle", step=0.1, value=0.1)
@@ -67,25 +67,6 @@ apply_params = form.form_submit_button("Apply parameters")
 
 # Run experiment
 
-st.write(
-    SAMPFREQ,
-    PROMINENCE,
-    WLEN,
-    MIN_CYCLE,
-    MAX_CYCLE,
-    TRAINING_SIZE,
-    INTERVAL,
-    N_IN_CLUSTER,
-    IN_D,
-    N_OUT_CLUSTER,
-    OUT_D,
-    DOWN_SAMPFREQ,
-    MAX_WARPING,
-    N_ITER,
-    QUANTILE,
-    NJOBS,
-    VERBOSE,
-)
 if zip_file is not None:
     if labels_df is None:
         st.subheader("Display data")
@@ -104,12 +85,33 @@ if zip_file is not None:
         st.plotly_chart(fig)
 
     else:
-        st.subheader("Display data with specific labels")
+        st.subheader("Display data")
+        filtering_expander = st.expander("Advanced Research")
+        filtering_params = {}
         for param_name in labels_df.columns[1:]:
-            st.selectbox(
+            filtering_params[param_name] = filtering_expander.multiselect(
                 f"{param_name}",
                 dict_labels[param_name],
+                default=dict_labels[param_name],
             )
+        labels_df_copy = labels_df.copy(deep=True)
+        for key, value in filtering_params.items():
+            labels_df_copy = labels_df_copy[labels_df_copy[key].isin(value)]
+
+        signal_idx = st.selectbox(
+            "Choose the signal you want to display",
+            labels_df_copy.index,
+            format_func=lambda i: zip_file.namelist()[i],
+        )
+
+        # Downsampling of the TS
+        freq_ratio_ = SAMPFREQ // DOWN_SAMPFREQ
+        considered_ts = file_array[signal_idx][::freq_ratio_]
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(x=list(range(considered_ts.shape[0])), y=considered_ts)
+        )
+        st.plotly_chart(fig)
 
 if st.sidebar.button("Run"):
     if zip_file is None:
