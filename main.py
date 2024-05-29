@@ -19,13 +19,16 @@ if zip_file is not None:
     zip_file = zipfile.ZipFile(zip_file, "r")
     file_array = from_zip_dataset_to_numpy(zip_file)
 
-    labels_file = st.sidebar.file_uploader(
+    labels_df = st.sidebar.file_uploader(
         "Upload a csv file with your labels to access visualization by label",
         type="csv",
     )
-    if labels_file is not None:
-        labels_file = pd.read_csv(labels_file)
-        number_of_files = file_array.size
+    if labels_df is not None:
+        labels_df = pd.read_csv(labels_df)
+        dict_labels = {}
+        for col in labels_df.columns:
+            dict_labels[col] = list(labels_df[col].unique())
+        st.write(dict_labels)
 
 # Parameters
 
@@ -56,8 +59,7 @@ if st.sidebar.checkbox("Advanced parameters"):
 # Run experiment
 
 if zip_file is not None:
-    if labels_file is None:
-        st.write("Enter a csv file if you want to be able to characterise your files")
+    if labels_df is None:
         number_of_files = file_array.size
         signal_idx = st.selectbox(
             "Choose the signal you want to display", np.arange(number_of_files)
@@ -65,7 +67,7 @@ if zip_file is not None:
         considered_ts = file_array[signal_idx]
         fig = go.Figure()
         fig.add_trace(
-            go.Scatter(x=[i for i in range(considered_ts.shape[0])], y=considered_ts)
+            go.Scatter(x=list(range(considered_ts.shape[0])), y=considered_ts)
         )
 
         # Set title
