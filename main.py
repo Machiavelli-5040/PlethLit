@@ -11,11 +11,11 @@ st.title(
     "Unsupervised classification of plethysmography signals with advanced visual representations - A demonstration."
 )
 
-zip_file = st.file_uploader("Upload a zip file", type="zip")
+zip_file = st.sidebar.file_uploader("Upload a zip file", type="zip")
 if zip_file is not None:
     file_array = from_zip_dataset_to_numpy(zipfile.ZipFile(zip_file, "r"))
 
-labels_file = st.file_uploader("Upload a csv file of the labels", type="csv")
+labels_file = st.sidebar.file_uploader("Upload a csv file of the labels", type="csv")
 
 
 DOWN_SAMPFREQ = 250
@@ -42,6 +42,11 @@ if st.sidebar.checkbox("Advanced parameters"):
     )
     PROMINENCE = st.sidebar.number_input("Prominence", step=0.01, value=0.03)
 
+if zip_file is not None:
+    if labels_file is None:
+        st.write("Enter a csv file if you want to be able to characterise your files")
+        number_of_files = file_array.size
+
 
 if st.button("Run"):
     if zip_file is None:
@@ -67,5 +72,4 @@ if st.button("Run"):
             VERBOSE,
         )
         pipe.fit(file_array)
-        fig = pipe.plot_medoid()
-        st.write(fig)
+        st.plotly_chart(pipe.plot_medoid(), theme=None)
