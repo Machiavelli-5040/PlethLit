@@ -2,6 +2,7 @@ import zipfile
 
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
 from tools.pipeline import Pipeline
@@ -46,7 +47,19 @@ if zip_file is not None:
     if labels_file is None:
         st.write("Enter a csv file if you want to be able to characterise your files")
         number_of_files = file_array.size
+        signal_idx = st.selectbox(
+            "Choose the signal you want to display", np.arange(number_of_files)
+        )
+        considered_ts = file_array[signal_idx]
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(x=[i for i in range(considered_ts.shape[0])], y=considered_ts)
+        )
 
+        # Set title
+        fig.update_layout(title_text="Time series number " + " " + str(signal_idx))
+
+        st.plotly_chart(fig)
 
 if st.button("Run"):
     if zip_file is None:
