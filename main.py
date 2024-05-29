@@ -55,11 +55,26 @@ if st.sidebar.checkbox("Advanced parameters"):
         "Downsampling frequency", step=50, value=250
     )
     PROMINENCE = st.sidebar.number_input("Prominence", step=0.01, value=0.03)
-
+    WLEN = st.sidebar.number_input("Wlen", step=1, value=2)
+    MIN_CYCLE = st.sidebar.number_input("Min_cycle", step=0.1, value=0.1)
+    MAX_CYCLE = st.sidebar.number_input("Max_cycle", step=0.1, value=0.3)
+    TRAINING_SIZE = st.sidebar.number_input("Training size", step=1, value=30)
+    INTERVAL = st.sidebar.number_input("Interval", step=1, value=60)
+    IN_D = st.sidebar.number_input("IN_D", step=0.1, value=0.2)
+    OUT_D = st.sidebar.number_input("OUT_D", step=0.1, value=0.2)
+    N_ITER = st.sidebar.number_input("nb_iter", step=1, value=10)
+    MAX_WARPING = st.sidebar.number_input(
+        "max_warping", step=0.01, value=0.06, min_value=0.0, max_value=1.0
+    )
+    QUANTILE = st.sidebar.number_input(
+        "quantile", step=0.1, value=0.95, min_value=0.0, max_value=1.0
+    )
 # Run experiment
 
 if zip_file is not None:
-    if labels_df is None:
+    if labels_file is None:
+        st.subheader("Display datas")
+        st.write("Enter a csv file to access advanced research parameters")
         number_of_files = file_array.size
         signal_idx = st.selectbox(
             "Choose the signal you want to display", np.arange(number_of_files)
@@ -99,4 +114,5 @@ if st.sidebar.button("Run"):
             VERBOSE,
         )
         pipe.fit(file_array)
+        st.subheader("Clustering results")
         st.plotly_chart(pipe.plot_medoid(), theme=None)
