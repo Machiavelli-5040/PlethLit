@@ -34,7 +34,7 @@ if zip_file is not None:
 
 NJOBS = 1
 VERBOSE = True
-form = st.sidebar.form("Choose parameters", clear_on_submit=True)
+form = st.sidebar.form("Choose parameters")
 form.write("Choose Parameters")
 SAMPFREQ = form.number_input("Sampling frequency", step=100, value=2000)
 N_CLUSTER = form.slider("Number of clusters", min_value=1, max_value=5, value=3)
@@ -59,9 +59,28 @@ MAX_WARPING = expander.number_input(
 QUANTILE = expander.number_input(
     "quantile", step=0.01, value=0.95, min_value=0.0, max_value=1.0
 )
-reset = form.form_submit_button("Reset parameters to default")
+apply_params = form.form_submit_button("Apply parameters")
 # Run experiment
 
+st.write(
+    SAMPFREQ,
+    PROMINENCE,
+    WLEN,
+    MIN_CYCLE,
+    MAX_CYCLE,
+    TRAINING_SIZE,
+    INTERVAL,
+    N_IN_CLUSTER,
+    IN_D,
+    N_OUT_CLUSTER,
+    OUT_D,
+    DOWN_SAMPFREQ,
+    MAX_WARPING,
+    N_ITER,
+    QUANTILE,
+    NJOBS,
+    VERBOSE,
+)
 if zip_file is not None:
     if labels_df is None:
         st.subheader("Display datas")
@@ -70,7 +89,9 @@ if zip_file is not None:
         signal_idx = st.selectbox(
             "Choose the signal you want to display", np.arange(number_of_files)
         )
-        considered_ts = file_array[signal_idx]
+        # downsampling of the TS
+        freq_ratio_ = SAMPFREQ // DOWN_SAMPFREQ
+        considered_ts = file_array[signal_idx][::freq_ratio_]
         fig = go.Figure()
         fig.add_trace(
             go.Scatter(x=list(range(considered_ts.shape[0])), y=considered_ts)
