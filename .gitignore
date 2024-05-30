@@ -6,4 +6,5 @@ __pycache__/
 
 datasets/*/*.csv
 datasets/*/*.EDF
+datasets/*/*.npy
 datasets/*/*.txt
