@@ -1,3 +1,4 @@
+import json
 import zipfile
 
 import numpy as np
@@ -87,8 +88,13 @@ if zip_file is not None:
     else:
         st.subheader("Display data")
         filtering_expander = st.expander("Advanced Research")
+        filtering_columns = filtering_expander.multiselect(
+            "Columns to filter",
+            list(labels_df.columns[1:]),
+            default=list(labels_df.columns[1:]),
+        )
         filtering_params = {}
-        for param_name in labels_df.columns[1:]:
+        for param_name in filtering_columns:
             filtering_params[param_name] = filtering_expander.multiselect(
                 f"{param_name}",
                 dict_labels[param_name],
@@ -139,3 +145,8 @@ if st.sidebar.button("Run"):
         pipe.fit(file_array)
         st.subheader("Clustering results")
         st.plotly_chart(pipe.plot_medoid(), theme=None)
+
+        preds = json.loads(
+            pipe.json_predictions_,
+        )
+        st.write(pd.read_json(preds[0]), orient="columns")
