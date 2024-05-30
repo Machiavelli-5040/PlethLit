@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from tools.pipeline import Pipeline
+from tools.utils import symbolic_representation
 from upload_data.data import from_zip_dataset_to_numpy
 
 st.title(
@@ -143,10 +144,28 @@ if st.sidebar.button("Run"):
             VERBOSE,
         )
         pipe.fit(file_array)
-        st.subheader("Clustering results")
-        st.plotly_chart(pipe.plot_medoid(), theme=None)
 
         preds = json.loads(
             pipe.json_predictions_,
         )
-        st.write(pd.read_json(preds[0]), orient="columns")
+        preds_df = pd.read_json(preds[signal_idx], orient="columns")
+        duration_array = np.concatenate(
+            (
+                (
+                    preds_df["in_start_index"][1:].to_numpy()
+                    - preds_df["in_start_index"][:-1].to_numpy()
+                ),
+                [2],
+            )
+        )
+        max_duration = np.sum(duration_array)
+        symbolic_representation(
+            preds_df["in_cluster"],
+            preds_df["out_cluster"],
+            duration_array,
+            max_duration,
+            N_IN_CLUSTER,
+            N_OUT_CLUSTER,
+        )
+        st.subheader("Clustering results")
+        st.plotly_chart(pipe.plot_medoid(), theme=None)
