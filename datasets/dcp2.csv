@@ -1,0 +1,5 @@
+,filename,genotype,before_start,before_end,after_start,after_end,arret
+0,"20160226_prima#_physo0-33_i5_e60_ep30.npy",prima,30000,1794000,2102000,6000000,fin
+1,"20170519_prima#12_physo0-33_i5_e60_ep30.npy",prima,30000,2396000,2588000,6016000,fin
+2,"20160128_colq1#44_physo0-33_i5_e60_ep30.npy",colq,1096000,2398000,2700000,6032000,fin
+3,"20160114_colq1#12_physo0-33_i5_e60_ep30.npy",colq,20000,2396000,2736000,4758000,mort

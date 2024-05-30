@@ -24,7 +24,7 @@ def from_zip_dataset_to_numpy(_zp: ZipFile) -> np.ndarray:
 
     # Select filename with the right extention and take out the mac extension
     extract_dir = f"datasets/{_zp.filename[:-4]}/"
-    extension_lst = [".txt", ".csv", ".EDF"]
+    extension_lst = [".txt", ".csv", ".EDF", ".npy"]
     mac_sub_dir = "__MACOSX"
     file_to_check = [
         filename for filename in _zp.namelist() if filename[-4:] in extension_lst
@@ -48,6 +48,9 @@ def from_zip_dataset_to_numpy(_zp: ZipFile) -> np.ndarray:
                     .readSignal(0)
                     .reshape(-1)
                 )
+                lst.append(signal)
+            elif filename[-4:] == ".npy":
+                signal = np.load(_zp.extract(filename, extract_dir))
                 lst.append(signal)
             else:
                 signal = pd.read_csv(

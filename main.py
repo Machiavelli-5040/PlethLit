@@ -73,7 +73,7 @@ if zip_file is not None:
         st.subheader("Display data")
         signal_idx = st.selectbox(
             "Choose the signal you want to display",
-            list(range(file_array.size)),
+            list(range(len(file_array))),
             format_func=lambda i: zip_file.namelist()[i],
         )
         # Downsampling of the TS
