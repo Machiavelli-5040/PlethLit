@@ -10,7 +10,7 @@ from tools.pipeline import Pipeline
 from tools.utils import qrcode_plot, symbolic_representation
 from upload_data.data import from_zip_dataset_to_numpy
 
-st.title("Results")
+st.title("Demonstration")
 
 # Inputs
 st.sidebar.subheader("Select files and parameters")
@@ -67,17 +67,19 @@ apply_params = form.form_submit_button("Apply parameters")
 
 # Run experiment
 run = st.sidebar.button("Run")
-
-if zip_file is not None:
-    tab_1, tab_2, tab_3 = st.tabs(
+if zip_file is None:
+    st.subheader("Guidelines")
+else:
+    tab_1, tab_2, tab_3, tab_4 = st.tabs(
         [
             "Individual representation",
             "Collective representation",
             "Representative respiratory cycles",
+            "Guidelines",
         ]
     )
     if labels_df is None:
-        tab_1.subheader("Indiviudal representation")
+        tab_1.subheader("Individual representation")
         signal_idx = tab_1.selectbox(
             "Choose the signal you want to display",
             list(range(len(file_array))),
@@ -125,9 +127,12 @@ if zip_file is not None:
         fig.add_trace(
             go.Scatter(x=list(range(considered_ts.shape[0])), y=considered_ts)
         )
-        st.plotly_chart(fig)
+        tab_1.plotly_chart(fig)
 
-if run:
+if not run:
+    tab_2.write("You have to run the demonstration to have content here")
+    tab_3.write("You have to run the demonstration to have content here")
+else:
     if zip_file is None:
         st.sidebar.write("Please input a zip archive first")
     else:
