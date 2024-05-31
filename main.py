@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from plotly.subplots import make_subplots
 from streamlit import session_state as state
 
 from tools.pipeline import Pipeline
@@ -127,7 +128,9 @@ with tab_0:
 
 
 with tab_1:
-    if zip_file is not None:
+    if zip_file is None:
+        st.write("Please input a zip file to visualize signals.")
+    else:
         if labels_df is None:
             signal_idx = st.selectbox(
                 "Choose the signal you want to display:",
@@ -161,41 +164,56 @@ with tab_1:
         # Downsampling
         freq_ratio_ = SAMPFREQ // DOWN_SAMPFREQ
         considered_ts = file_array[signal_idx][::freq_ratio_]
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=list(range(len(considered_ts))), y=considered_ts))
-        st.plotly_chart(fig)
-
-    if state.pipe is not None:
-        preds = json.loads(
-            state.pipe.json_predictions_,
+        fig_signal = go.Figure()
+        fig_signal.add_trace(
+            go.Scatter(x=list(range(len(considered_ts))), y=considered_ts)
         )
-        preds_df = pd.read_json(preds[signal_idx], orient="columns")
-        total_duration = len(considered_ts)
-        duration_array = (
-            np.concatenate(
-                (preds_df["in_start_index"][1:].to_numpy(), [total_duration])
+
+        # Plots
+        if state.pipe is None:
+            st.plotly_chart(fig_signal)
+        else:
+            preds = json.loads(
+                state.pipe.json_predictions_,
             )
-            - preds_df["in_start_index"].to_numpy()
-        )
+            preds_df = pd.read_json(preds[signal_idx], orient="columns")
+            total_duration = len(considered_ts)
+            duration_array = (
+                np.concatenate(
+                    (preds_df["in_start_index"][1:].to_numpy(), [total_duration])
+                )
+                - preds_df["in_start_index"].to_numpy()
+            )
 
-        symbolic_representation(
-            preds_df["in_cluster"],
-            preds_df["out_cluster"],
-            duration_array,
-            total_duration,
-            N_IN_CLUSTER,
-            N_OUT_CLUSTER,
-        )
-        qrcode = np.zeros((N_IN_CLUSTER, N_OUT_CLUSTER))
-        for idx_in, idx_out, duration in zip(
-            preds_df["in_cluster"], preds_df["out_cluster"], duration_array
-        ):
-            qrcode[idx_in, idx_out] += duration
-        qrcode /= np.sum(qrcode)
+            fig_in, fig_out = symbolic_representation(
+                preds_df["in_cluster"],
+                preds_df["out_cluster"],
+                duration_array,
+                N_IN_CLUSTER,
+                N_OUT_CLUSTER,
+            )
 
-        in_labels = [chr(x) for x in range(ord("A"), ord("A") + N_CLUSTER)]
-        out_labels = [x for x in range(N_CLUSTER)]
-        qrcode_plot(in_labels, out_labels, qrcode)
+            fig = make_subplots(
+                rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.02
+            )
+            for i in fig_signal.data:
+                fig.add_trace(i, row=1, col=1)
+            for i in fig_in.data:
+                fig.add_trace(i, row=2, col=1)
+            for i in fig_out.data:
+                fig.add_trace(i, row=3, col=1)
+            st.plotly_chart(fig)
+
+            qrcode = np.zeros((N_IN_CLUSTER, N_OUT_CLUSTER))
+            for idx_in, idx_out, duration in zip(
+                preds_df["in_cluster"], preds_df["out_cluster"], duration_array
+            ):
+                qrcode[idx_in, idx_out] += duration
+            qrcode /= np.sum(qrcode)
+
+            in_labels = [chr(x) for x in range(ord("A"), ord("A") + N_CLUSTER)]
+            out_labels = list(range(N_CLUSTER))
+            qrcode_plot(in_labels, out_labels, qrcode)
 
 
 # Collective ===================================================================

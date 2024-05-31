@@ -2,9 +2,12 @@ from typing import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from joblib import Parallel, delayed
+from matplotlib.colors import rgb2hex
 
 
 def cdist(
@@ -69,48 +72,55 @@ def symbolic_representation(
     in_pred,
     out_pred,
     duration_arr,
-    max_duration,
     n_in_cluster,
     n_out_cluster,
     in_palette="autumn",
     out_palette="winter",
-    max_width=20,
 ):
-
     # Get colors
     in_cmap = plt.cm.get_cmap(in_palette, n_in_cluster)
-    in_colors = np.array(
-        [in_cmap(i) for i in range(n_in_cluster)] + ["gainsboro"], dtype=object
+    in_color_seq = np.array(
+        [rgb2hex(in_cmap(i)) for i in range(n_in_cluster)] + ["#bbbbbb"]
     )
     out_cmap = plt.cm.get_cmap(out_palette, n_out_cluster)
-    out_colors = np.array(
-        [out_cmap(i) for i in range(n_out_cluster)] + ["gainsboro"], dtype=object
+    out_color_seq = np.array(
+        [rgb2hex(out_cmap(i)) for i in range(n_out_cluster)] + ["#bbbbbb"]
     )
 
-    # Create figure
-    height_ratio = 1 / 15
-    width = int(max_width * np.sum(duration_arr) / max_duration)
-    fig, ax = plt.subplots(figsize=(width, height_ratio * max_width))
-
-    # create axes:
     time = np.cumsum(duration_arr)[::-1]
     print(time)
-    ax.barh(np.ones_like(in_pred), time, height=1.0, color=in_colors[in_pred[::-1]])
-    ax.barh(np.zeros_like(out_pred), time, height=1.0, color=out_colors[out_pred[::-1]])
 
-    # remove axis and margin
-    ax.yaxis.set_visible(False)
-    ax.xaxis.set_visible(False)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_visible(False)
-    ax.spines["bottom"].set_visible(False)
-    ax.margins(x=-0)
-    ax.margins(y=0)
+    df_in = pd.DataFrame(
+        {"y": np.ones_like(in_pred), "time": duration_arr, "pred": in_pred}
+    )
+    fig_in = px.bar(
+        df_in, x="time", y="y", orientation="h", height=200, hover_data=["pred"]
+    )
+    fig_in.update_traces(marker_color=in_color_seq[in_pred])
+    fig_in.update_layout(
+        xaxis_visible=False,
+        xaxis_showticklabels=False,
+        yaxis_visible=False,
+        yaxis_showticklabels=False,
+        showlegend=False,
+    )
 
-    st.pyplot(fig)
+    df_out = pd.DataFrame(
+        {"y": np.ones_like(in_pred), "time": duration_arr, "pred": out_pred}
+    )
+    fig_out = px.bar(
+        df_out, x="time", y="y", orientation="h", height=200, hover_data=["pred"]
+    )
+    fig_out.update_traces(marker_color=out_color_seq[in_pred])
+    fig_out.update_layout(
+        xaxis_visible=False,
+        xaxis_showticklabels=False,
+        yaxis_visible=False,
+        yaxis_showticklabels=False,
+        showlegend=False,
+    )
 
-    return fig, ax
+    return fig_in, fig_out
 
 
 def qrcode_plot(
