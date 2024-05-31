@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from tools.pipeline import Pipeline
-from tools.utils import symbolic_representation
+from tools.utils import qrcode_plot, symbolic_representation
 from upload_data.data import from_zip_dataset_to_numpy
 
 st.title(
@@ -15,14 +15,14 @@ st.title(
 )
 
 # Inputs
-
+st.sidebar.subheader("Select files and parameters")
 zip_file = st.sidebar.file_uploader("Upload a zip file", type="zip")
 if zip_file is not None:
     zip_file = zipfile.ZipFile(zip_file, "r")
     file_array = from_zip_dataset_to_numpy(zip_file)
 
     labels_df = st.sidebar.file_uploader(
-        "Upload a csv file with your labels to access advanced visualization",
+        "Upload a csv file with your labels to access advanced visualization.",
         type="csv",
     )
     if labels_df is not None:
@@ -87,7 +87,7 @@ if zip_file is not None:
         st.plotly_chart(fig)
 
     else:
-        st.subheader("Display data")
+        st.subheader("Individual representation")
         filtering_expander = st.expander("Advanced Research")
         filtering_columns = filtering_expander.multiselect(
             "Columns to filter",
@@ -149,15 +149,13 @@ if st.sidebar.button("Run"):
             pipe.json_predictions_,
         )
         preds_df = pd.read_json(preds[signal_idx], orient="columns")
-        duration_array = np.concatenate(
-            (
-                (
-                    preds_df["in_start_index"][1:].to_numpy()
-                    - preds_df["in_start_index"][:-1].to_numpy()
-                ),
-                [2],
+        duration_array = (
+            np.concatenate(
+                (preds_df["in_start_index"][1:].to_numpy(), [considered_ts.shape[0]])
             )
+            - preds_df["in_start_index"].to_numpy()
         )
+
         max_duration = np.sum(duration_array)
         symbolic_representation(
             preds_df["in_cluster"],
@@ -167,5 +165,17 @@ if st.sidebar.button("Run"):
             N_IN_CLUSTER,
             N_OUT_CLUSTER,
         )
+        qrcode = np.zeros((N_IN_CLUSTER, N_OUT_CLUSTER))
+        for idx_in, idx_out, duration in zip(
+            preds_df["in_cluster"], preds_df["out_cluster"], duration_array
+        ):
+            qrcode[idx_in, idx_out] += duration
+        qrcode /= np.sum(qrcode)
+
+        in_labels = [chr(x) for x in range(ord("A"), ord("A") + N_CLUSTER)]
+        out_labels = [x for x in range(N_CLUSTER)]
+        qrcode_plot(in_labels, out_labels, qrcode)
+        st.subheader("Collective representation")
+
         st.subheader("Clustering results")
         st.plotly_chart(pipe.plot_medoid(), theme=None)

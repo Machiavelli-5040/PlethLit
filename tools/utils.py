@@ -2,6 +2,7 @@ from typing import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
+import plotly.graph_objects as go
 import streamlit as st
 from joblib import Parallel, delayed
 
@@ -110,3 +111,37 @@ def symbolic_representation(
     st.pyplot(fig)
 
     return fig, ax
+
+
+def qrcode_plot(
+    in_labels,
+    out_labels,
+    qrcode,
+    showaxis=True,
+    showscale=True,
+    margin=True,
+    width=400,
+):
+    fig = go.Figure()
+    fig.add_trace(
+        go.Heatmap(
+            x=out_labels,
+            y=in_labels,
+            z=qrcode,
+            zmin=0,
+            showscale=showscale,
+            colorscale="viridis",
+        )
+    )
+    fig.update_yaxes(autorange="reversed", visible=showaxis)
+    fig.update_xaxes(side="top", visible=showaxis)
+    fig.update_layout(
+        hovermode="closest",
+        width=width,
+        height=width,
+    )
+
+    if not margin:
+        fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+    st.plotly_chart(fig)
+    return fig
