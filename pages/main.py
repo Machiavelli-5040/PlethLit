@@ -27,8 +27,6 @@ if zip_file is not None:
     )
     if labels_df is not None:
         labels_df = pd.read_csv(labels_df)
-        # Remove eventual manual index column
-        labels_df = labels_df.drop(["Unnamed: 0"], axis=1, errors="ignore")
 
         dict_labels = {}
         for col in labels_df.columns:

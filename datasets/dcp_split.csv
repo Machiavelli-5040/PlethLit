@@ -1,0 +1,17 @@
+filename,genotype,instant,arret
+"20160226_prima#_physo0-33_i5_e60_ep30_before.npy",prima,before,fin
+"20160226_prima#_physo0-33_i5_e60_ep30_after.npy",prima,after,fin
+"20170519_prima#12_physo0-33_i5_e60_ep30_before.npy",prima,before,fin
+"20170519_prima#12_physo0-33_i5_e60_ep30_after.npy",prima,after,fin
+"20160128_colq1#44_physo0-33_i5_e60_ep30_before.npy",colq,before,fin
+"20160128_colq1#44_physo0-33_i5_e60_ep30_after.npy",colq,after,fin
+"20160114_colq1#12_physo0-33_i5_e60_ep30_before.npy",colq,before,mort
+"20160114_colq1#12_physo0-33_i5_e60_ep30_after.npy",colq,after,mort
+"20160128_del1_physo0-33_i5_e60_ep30_before.npy",del1,before,fin
+"20160128_del1_physo0-33_i5_e60_ep30_after.npy",del1,after,fin
+"20160121_del1_physo0-33_i5_e60_ep30_before.npy",del1,before,mort
+"20160121_del1_physo0-33_i5_e60_ep30_after.npy",del1,after,mort
+"20151207_wt#31_physo0-33_i5_e60_ep30_before.npy",wt,before,fin
+"20151207_wt#31_physo0-33_i5_e60_ep30_after.npy",wt,after,fin
+"20151209_wt#68_physo0-33_i5_e60_ep30_before.npy",wt,before,fin
+"20151209_wt#68_physo0-33_i5_e60_ep30_after.npy",wt,after,fin
