@@ -149,19 +149,18 @@ if st.sidebar.button("Run"):
             pipe.json_predictions_,
         )
         preds_df = pd.read_json(preds[signal_idx], orient="columns")
+        total_duration = considered_ts.shape[0]
         duration_array = (
             np.concatenate(
-                (preds_df["in_start_index"][1:].to_numpy(), [considered_ts.shape[0]])
+                (preds_df["in_start_index"][1:].to_numpy(), [total_duration])
             )
             - preds_df["in_start_index"].to_numpy()
         )
-
-        max_duration = np.sum(duration_array)
         symbolic_representation(
             preds_df["in_cluster"],
             preds_df["out_cluster"],
             duration_array,
-            max_duration,
+            total_duration,
             N_IN_CLUSTER,
             N_OUT_CLUSTER,
         )
