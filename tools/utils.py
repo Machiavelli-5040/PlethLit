@@ -87,35 +87,30 @@ def symbolic_representation(
         [rgb2hex(out_cmap(i)) for i in range(n_out_cluster)] + ["#bbbbbb"]
     )
 
-    df_in = pd.DataFrame(
-        {"y": np.ones_like(in_pred), "time": duration_arr, "pred": in_pred}
-    )
+    df_in = pd.DataFrame({"y": np.ones_like(in_pred), "time": duration_arr})
     fig_in = px.bar(
-        df_in, x="time", y="y", orientation="h", height=200, hover_data=["pred"]
+        df_in,
+        x="time",
+        y="y",
+        orientation="h",
+        height=200,
+        hover_data={
+            "y": False,
+            "pred": [chr(65 + i) if i > -1 else "?" for i in in_pred],
+        },
     )
     fig_in.update_traces(marker_color=in_color_seq[in_pred])
-    fig_in.update_layout(
-        xaxis_visible=False,
-        xaxis_showticklabels=False,
-        yaxis_visible=False,
-        yaxis_showticklabels=False,
-        showlegend=False,
-    )
 
-    df_out = pd.DataFrame(
-        {"y": np.ones_like(in_pred), "time": duration_arr, "pred": out_pred}
-    )
+    df_out = pd.DataFrame({"y": np.ones_like(in_pred), "time": duration_arr})
     fig_out = px.bar(
-        df_out, x="time", y="y", orientation="h", height=200, hover_data=["pred"]
+        df_out,
+        x="time",
+        y="y",
+        orientation="h",
+        height=200,
+        hover_data={"y": False, "pred": [i if i > -1 else "?" for i in out_pred]},
     )
     fig_out.update_traces(marker_color=out_color_seq[out_pred])
-    fig_out.update_layout(
-        xaxis_visible=False,
-        xaxis_showticklabels=False,
-        yaxis_visible=False,
-        yaxis_showticklabels=False,
-        showlegend=False,
-    )
 
     return fig_in, fig_out
 

@@ -42,6 +42,7 @@ if "pipe" not in state:
 zip_file = st.sidebar.file_uploader("Upload a zip file", type="zip")
 if zip_file is not None:
     zip_file = zipfile.ZipFile(zip_file, "r")
+    ordered_filenames = sorted(zip_file.namelist())
     file_array = from_zip_dataset_to_numpy(zip_file)
 
     labels_df = st.sidebar.file_uploader(
@@ -49,7 +50,9 @@ if zip_file is not None:
         type="csv",
     )
     if labels_df is not None:
-        labels_df = pd.read_csv(labels_df)
+        labels_df = (
+            pd.read_csv(labels_df).sort_values(by=["filename"]).reset_index(drop=True)
+        )
 
         dict_labels = {}
         for col in labels_df.columns:
@@ -102,7 +105,7 @@ params["radius"] = expander.number_input(
 params["quantile_threshold"] = expander.number_input(
     "Quantile threshold", step=0.01, value=0.95, min_value=0.0, max_value=1.0
 )
-apply_params = form.form_submit_button("Apply parameters")  # Save parameters
+form.form_submit_button("Apply parameters")  # Save parameters
 run = st.sidebar.button("Run")  # Run experiment
 
 # Run
@@ -121,8 +124,6 @@ with tab_0:
     st.write("To do!")
     st.image("meme.jpg")
 
-    st.write(params)
-
 
 # Individual ===================================================================
 
@@ -135,38 +136,46 @@ with tab_1:
             signal_idx = st.selectbox(
                 "Choose the signal you want to display:",
                 list(range(len(file_array))),
-                format_func=lambda i: zip_file.namelist()[i],
+                format_func=lambda i: ordered_filenames[i],
             )
         else:
-            filtering_expander = st.expander("Advanced Research")
-            filtering_columns = filtering_expander.multiselect(
+            indv_expander = st.expander("Advanced Research")
+            indv_columns = indv_expander.multiselect(
                 "Columns to filter",
                 list(labels_df.columns[1:]),
                 default=list(labels_df.columns[1:]),
+                key=f"individual",
             )
-            filtering_expander.write("Please select to features to keep below:")
-            filtering_params = {}
-            for param_name in filtering_columns:
-                filtering_params[param_name] = filtering_expander.multiselect(
+            indv_expander.write("Please select to features to keep below:")
+            indv_params = {}
+            indv_form = indv_expander.form("individual")
+            for param_name in indv_columns:
+                indv_params[param_name] = indv_form.multiselect(
                     f"{param_name}",
                     dict_labels[param_name],
                     default=dict_labels[param_name],
+                    key=f"individual_{param_name}",
                 )
+            indv_form.form_submit_button("Apply")
             labels_df_copy = labels_df.copy(deep=True)
-            for key, value in filtering_params.items():
+            for key, value in indv_params.items():
                 labels_df_copy = labels_df_copy[labels_df_copy[key].isin(value)]
 
             signal_idx = st.selectbox(
                 "Choose the signal you want to display (the list of signals will be tuned according to the chosen parameters above):",
                 labels_df_copy.index,
-                format_func=lambda i: zip_file.namelist()[i],
+                format_func=lambda i: ordered_filenames[i],
             )
         # Downsampling
         freq_ratio_ = params["sampfreq"] // params["down_sampfreq"]
         considered_ts = file_array[signal_idx][::freq_ratio_]
-        fig_signal = go.Figure()
-        fig_signal.add_trace(
-            go.Scatter(x=list(range(len(considered_ts))), y=considered_ts)
+        fig_signal = go.Figure(
+            go.Scatter(
+                x=list(range(len(considered_ts))),
+                y=considered_ts,
+                showlegend=False,
+                name="",
+            )
         )
 
         # Plots
@@ -176,57 +185,87 @@ with tab_1:
             preds = json.loads(
                 state.pipe.json_predictions_,
             )
-            preds_df = pd.read_json(preds[signal_idx], orient="columns")
-            total_duration = len(considered_ts)
-            duration_array = (
-                np.concatenate(
-                    (preds_df["in_start_index"][1:].to_numpy(), [total_duration])
+            try:
+                preds_df = pd.read_json(preds[signal_idx], orient="columns")
+            except TypeError:
+                st.write("Please select al least 1 value for each parameter.")
+            else:
+                total_duration = len(considered_ts)
+                duration_array = (
+                    np.concatenate(
+                        (preds_df["in_start_index"][1:].to_numpy(), [total_duration])
+                    )
+                    - preds_df["in_start_index"].to_numpy()
                 )
-                - preds_df["in_start_index"].to_numpy()
-            )
 
-            fig_in, fig_out = symbolic_representation(
-                preds_df["in_cluster"],
-                preds_df["out_cluster"],
-                duration_array,
-                params["in_ncluster"],
-                params["out_ncluster"],
-            )
+                # Signal visualization
+                fig_in, fig_out = symbolic_representation(
+                    preds_df["in_cluster"],
+                    preds_df["out_cluster"],
+                    duration_array,
+                    params["in_ncluster"],
+                    params["out_ncluster"],
+                )
 
-            fig = make_subplots(
-                rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.02
-            )
-            for i in fig_signal.data:
-                fig.add_trace(i, row=1, col=1)
-            for i in fig_in.data:
-                fig.add_trace(i, row=2, col=1)
-            for i in fig_out.data:
-                fig.add_trace(i, row=3, col=1)
-            st.plotly_chart(fig)
+                fig = make_subplots(
+                    rows=3, cols=1, shared_xaxes=True, vertical_spacing=0
+                )
+                for idx, subfig in enumerate([fig_signal, fig_in, fig_out]):
+                    for i in subfig.data:
+                        fig.add_trace(i, row=idx + 1, col=1)
+                for i, s in enumerate(["in", "out"]):
+                    next(fig.select_yaxes(row=2 + i, col=1)).update(
+                        labelalias={"1": f"{s}"}
+                    )
+                fig.update_xaxes(range=[0, len(considered_ts)])
+                st.plotly_chart(fig)
 
-            qrcode = np.zeros((params["in_ncluster"], params["out_ncluster"]))
-            for idx_in, idx_out, duration in zip(
-                preds_df["in_cluster"], preds_df["out_cluster"], duration_array
-            ):
-                qrcode[idx_in, idx_out] += duration
-            qrcode /= np.sum(qrcode)
-
-            in_labels = [
-                chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])
-            ]
-            out_labels = list(range(params["out_ncluster"]))
-            qrcode_plot(in_labels, out_labels, qrcode)
+                # QR code
+                qrcode = np.zeros((params["in_ncluster"], params["out_ncluster"]))
+                for idx_in, idx_out, duration in zip(
+                    preds_df["in_cluster"], preds_df["out_cluster"], duration_array
+                ):
+                    qrcode[idx_in, idx_out] += duration
+                qrcode /= np.sum(qrcode)
+                in_labels = [
+                    chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])
+                ]
+                out_labels = list(range(params["out_ncluster"]))
+                qrcode_plot(in_labels, out_labels, qrcode)
 
 
 # Collective ===================================================================
 
 
 with tab_2:
-    if state.pipe is None:
-        st.write("Please run the demonstration first to output results here.")
+    if state.pipe is None or labels_df is None:
+        st.write(
+            "Please run the demonstration first and provide a csv file with the labels to output results here."
+        )
     else:
-        pass
+        coll_expander = st.expander("Parameter select")
+        coll_columns = coll_expander.multiselect(
+            "Columns to filter",
+            list(labels_df.columns[1:]),
+            default=list(labels_df.columns[1:]),
+            key=f"collective",
+        )
+        coll_expander.write("Please select to features to keep below:")
+        coll_params = {}
+        coll_form = coll_expander.form("collective")
+        for param_name in coll_columns:
+            coll_params[param_name] = coll_form.multiselect(
+                f"{param_name}",
+                dict_labels[param_name],
+                default=dict_labels[param_name],
+                key=f"collective_{param_name}",
+            )
+        coll_form.form_submit_button("Apply")
+        labels_df_copy = labels_df.copy(deep=True)
+        for key, value in coll_params.items():
+            labels_df_copy = labels_df_copy[labels_df_copy[key].isin(value)]
 
+        st.write(coll_params)
 
 # Representative cycles ========================================================
 
