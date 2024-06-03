@@ -87,9 +87,6 @@ def symbolic_representation(
         [rgb2hex(out_cmap(i)) for i in range(n_out_cluster)] + ["#bbbbbb"]
     )
 
-    time = np.cumsum(duration_arr)[::-1]
-    print(time)
-
     df_in = pd.DataFrame(
         {"y": np.ones_like(in_pred), "time": duration_arr, "pred": in_pred}
     )
