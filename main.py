@@ -58,34 +58,50 @@ if zip_file is not None:
         if set(zip_file.namelist()) != set(dict_labels["filename"]):
             st.write("WARNING: Filenames in the zip and in the csv do not match")
 
+# Parameters
+params = {}
+params["njobs"] = 1
+params["verbose"] = True
+form = st.sidebar.form("parameters")
+form.write("Choose parameters")
 # Basic parameters
-NJOBS = 1
-VERBOSE = True
-form = st.sidebar.form("Choose parameters")
-form.write("Choose Parameters")
-SAMPFREQ = form.number_input("Sampling frequency", step=100, value=2000)
-DOWN_SAMPFREQ = form.number_input("Downsampling frequency", step=50, value=250)
-N_CLUSTER = form.slider("Number of clusters", min_value=1, max_value=5, value=3)
-N_IN_CLUSTER = N_OUT_CLUSTER = N_CLUSTER
-
+params["sampfreq"] = form.number_input("Sampling frequency", step=100, value=2000)
+params["down_sampfreq"] = form.number_input(
+    "Downsampling frequency", step=50, value=250
+)
+params["in_ncluster"] = form.slider(
+    "Number of inhalation clusters", min_value=1, max_value=5, value=3
+)
+params["out_ncluster"] = form.slider(
+    "Number of exhalation clusters", min_value=1, max_value=5, value=3
+)
 # Advanced parameters
 expander = form.expander("Advanced parameters")
-PROMINENCE = expander.number_input("Prominence", step=0.01, value=0.03)
-WLEN = expander.number_input("Wlen", step=1, value=2)
-MIN_CYCLE = expander.number_input("Min_cycle", step=0.1, value=0.1)
-MAX_CYCLE = expander.number_input("Max_cycle", step=0.1, value=0.3)
-TRAINING_SIZE = expander.number_input("Training size", step=1, value=30)
-INTERVAL = expander.number_input("Interval", step=1, value=60)
-IN_D = expander.number_input("IN_D", step=0.1, value=0.2)
-OUT_D = expander.number_input("OUT_D", step=0.1, value=0.2)
-N_ITER = expander.number_input("nb_iter", step=1, value=10)
-MAX_WARPING = expander.number_input(
-    "max_warping", step=0.01, value=0.06, min_value=0.0, max_value=1.0
+params["prominence"] = expander.number_input("Prominence", step=0.01, value=0.03)
+params["wlen"] = expander.number_input("Wlen", step=1, value=2)
+params["cycle_minimum_duration"] = expander.number_input(
+    "Cycle minimum duration", step=0.1, value=0.1
 )
-QUANTILE = expander.number_input(
-    "quantile", step=0.01, value=0.95, min_value=0.0, max_value=1.0
+params["cycle_maximum_duration"] = expander.number_input(
+    "Cycle maximum duration", step=0.1, value=0.3
 )
-
+params["training_size_per_interval"] = expander.number_input(
+    "Training size per interval", step=1, value=30
+)
+params["interval"] = expander.number_input("Interval", step=1, value=60)
+params["in_centroid_duration"] = expander.number_input(
+    "In centroid duration", step=0.1, value=0.2
+)
+params["out_centroid_duration"] = expander.number_input(
+    "Out centroid duration", step=0.1, value=0.2
+)
+params["n_iteration"] = expander.number_input("Number of iterations", step=1, value=10)
+params["radius"] = expander.number_input(
+    "Max warping/radius", step=0.01, value=0.06, min_value=0.0, max_value=1.0
+)
+params["quantile_threshold"] = expander.number_input(
+    "Quantile threshold", step=0.01, value=0.95, min_value=0.0, max_value=1.0
+)
 apply_params = form.form_submit_button("Apply parameters")  # Save parameters
 run = st.sidebar.button("Run")  # Run experiment
 
@@ -94,25 +110,7 @@ if run:
     if zip_file is None:
         st.sidebar.write("Please input a zip archive first")
     else:
-        state.pipe = Pipeline(
-            SAMPFREQ,
-            PROMINENCE,
-            WLEN,
-            MIN_CYCLE,
-            MAX_CYCLE,
-            TRAINING_SIZE,
-            INTERVAL,
-            N_IN_CLUSTER,
-            IN_D,
-            N_OUT_CLUSTER,
-            OUT_D,
-            DOWN_SAMPFREQ,
-            MAX_WARPING,
-            N_ITER,
-            QUANTILE,
-            NJOBS,
-            VERBOSE,
-        )
+        state.pipe = Pipeline(**params)
         state.pipe.fit(file_array)
 
 
@@ -122,6 +120,8 @@ if run:
 with tab_0:
     st.write("To do!")
     st.image("meme.jpg")
+
+    st.write(params)
 
 
 # Individual ===================================================================
@@ -162,7 +162,7 @@ with tab_1:
                 format_func=lambda i: zip_file.namelist()[i],
             )
         # Downsampling
-        freq_ratio_ = SAMPFREQ // DOWN_SAMPFREQ
+        freq_ratio_ = params["sampfreq"] // params["down_sampfreq"]
         considered_ts = file_array[signal_idx][::freq_ratio_]
         fig_signal = go.Figure()
         fig_signal.add_trace(
@@ -189,8 +189,8 @@ with tab_1:
                 preds_df["in_cluster"],
                 preds_df["out_cluster"],
                 duration_array,
-                N_IN_CLUSTER,
-                N_OUT_CLUSTER,
+                params["in_ncluster"],
+                params["out_ncluster"],
             )
 
             fig = make_subplots(
@@ -204,15 +204,17 @@ with tab_1:
                 fig.add_trace(i, row=3, col=1)
             st.plotly_chart(fig)
 
-            qrcode = np.zeros((N_IN_CLUSTER, N_OUT_CLUSTER))
+            qrcode = np.zeros((params["in_ncluster"], params["out_ncluster"]))
             for idx_in, idx_out, duration in zip(
                 preds_df["in_cluster"], preds_df["out_cluster"], duration_array
             ):
                 qrcode[idx_in, idx_out] += duration
             qrcode /= np.sum(qrcode)
 
-            in_labels = [chr(x) for x in range(ord("A"), ord("A") + N_CLUSTER)]
-            out_labels = list(range(N_CLUSTER))
+            in_labels = [
+                chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])
+            ]
+            out_labels = list(range(params["out_ncluster"]))
             qrcode_plot(in_labels, out_labels, qrcode)
 
 
@@ -222,6 +224,8 @@ with tab_1:
 with tab_2:
     if state.pipe is None:
         st.write("Please run the demonstration first to output results here.")
+    else:
+        pass
 
 
 # Representative cycles ========================================================

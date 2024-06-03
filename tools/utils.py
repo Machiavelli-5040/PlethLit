@@ -108,7 +108,7 @@ def symbolic_representation(
     fig_out = px.bar(
         df_out, x="time", y="y", orientation="h", height=200, hover_data=["pred"]
     )
-    fig_out.update_traces(marker_color=out_color_seq[in_pred])
+    fig_out.update_traces(marker_color=out_color_seq[out_pred])
     fig_out.update_layout(
         xaxis_visible=False,
         xaxis_showticklabels=False,

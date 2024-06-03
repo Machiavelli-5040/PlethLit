@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import streamlit as st
 from plotly.subplots import make_subplots
 
 from tools.clustering import KmeanDTW
@@ -46,7 +45,7 @@ class Pipeline(object):
         self.training_size_per_interval = training_size_per_interval
         self.interval = interval
 
-        # clustering
+        # Clustering
         self.in_ncluster = in_ncluster
         self.in_centroid_duration = in_centroid_duration
         self.out_ncluster = out_ncluster
@@ -284,14 +283,11 @@ class Pipeline(object):
                     )
 
         for i, color in enumerate(in_colors):
-            fig["layout"][f"yaxis{self.in_ncluster*i+1}"][
-                "title"
-            ] = f"<b>{chr(65+i)}</b>"
-            fig["layout"][f"yaxis{self.in_ncluster*i+1}"]["title"]["font"] = dict(
-                size=40, color=color
+            next(fig.select_yaxes(row=1 + i, col=1)).update(
+                title=dict(text=f"<b>{chr(65+i)}</b>", font=dict(size=40, color=color))
             )
         for i, color in enumerate(out_colors):
-            fig["layout"]["annotations"][i]["font"] = dict(size=40, color=color)
+            fig.layout["annotations"][i]["font"] = dict(size=40, color=color)
         fig.update_layout(
             hovermode="closest",
             width=self.out_ncluster * 200 + 100,
