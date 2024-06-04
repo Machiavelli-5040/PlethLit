@@ -225,7 +225,8 @@ with tab_1:
                 for idx_in, idx_out, duration in zip(
                     preds_df["in_cluster"], preds_df["out_cluster"], duration_array
                 ):
-                    qrcode[idx_in, idx_out] += duration
+                    if idx_in != -1 and idx_out != -1:
+                        qrcode[idx_in, idx_out] += duration
                 qrcode /= np.sum(qrcode)
                 in_labels = [
                     chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])
