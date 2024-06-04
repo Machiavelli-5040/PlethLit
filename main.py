@@ -157,13 +157,13 @@ with tab_1:
                     key=f"individual_{param_name}",
                 )
             indv_form.form_submit_button("Apply")
-            labels_df_copy = labels_df.copy(deep=True)
+            labels_df_indv = labels_df.copy(deep=True)
             for key, value in indv_params.items():
-                labels_df_copy = labels_df_copy[labels_df_copy[key].isin(value)]
+                labels_df_indv = labels_df_indv[labels_df_indv[key].isin(value)]
 
             signal_idx = st.selectbox(
                 "Choose the signal you want to display (the list of signals will be tuned according to the chosen parameters above):",
-                labels_df_copy.index,
+                labels_df_indv.index,
                 format_func=lambda i: ordered_filenames[i],
             )
         # Downsampling
@@ -262,11 +262,47 @@ with tab_2:
                 key=f"collective_{param_name}",
             )
         coll_form.form_submit_button("Apply")
-        labels_df_copy = labels_df.copy(deep=True)
-        for key, value in coll_params.items():
-            labels_df_copy = labels_df_copy[labels_df_copy[key].isin(value)]
 
-        st.write(coll_params)
+        labels_df_coll = labels_df.copy(deep=True)
+        for key, value in coll_params.items():
+            labels_df_coll = labels_df_coll[labels_df_coll[key].isin(value)]
+
+        preds = json.loads(
+            state.pipe.json_predictions_,
+        )
+
+        # QR code
+        if not len(labels_df_coll.index):
+            st.write("Please select al least 1 value for each parameter.")
+        else:
+            qrcode = np.zeros((params["in_ncluster"], params["out_ncluster"]))
+
+            for idx in labels_df_coll.index:
+                preds_df = pd.read_json(preds[idx], orient="columns")
+                freq_ratio_ = params["sampfreq"] // params["down_sampfreq"]
+                considered_ts = file_array[signal_idx][::freq_ratio_]
+                total_duration = len(considered_ts)
+                duration_array = (
+                    np.concatenate(
+                        (preds_df["in_start_index"][1:].to_numpy(), [total_duration])
+                    )
+                    - preds_df["in_start_index"].to_numpy()
+                )
+                for idx_in, idx_out, duration in zip(
+                    preds_df["in_cluster"], preds_df["out_cluster"], duration_array
+                ):
+                    if idx_in != -1 and idx_out != -1:
+                        qrcode[idx_in, idx_out] += duration
+
+            qrcode /= np.sum(qrcode)
+            in_labels = [
+                chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])
+            ]
+            out_labels = list(range(params["out_ncluster"]))
+            qrcode_plot(in_labels, out_labels, qrcode)
+
+        # maybe create a function for qr codes formatting?
+
 
 # Representative cycles ========================================================
 
