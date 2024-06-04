@@ -244,63 +244,127 @@ with tab_2:
             "Please run the demonstration first and provide a csv file with the labels to output results here."
         )
     else:
-        coll_expander = st.expander("Parameter select")
-        coll_columns = coll_expander.multiselect(
-            "Columns to filter",
-            list(labels_df.columns[1:]),
-            default=list(labels_df.columns[1:]),
-            key=f"collective",
-        )
-        coll_expander.write("Please select to features to keep below:")
-        coll_params = {}
-        coll_form = coll_expander.form("collective")
-        for param_name in coll_columns:
-            coll_params[param_name] = coll_form.multiselect(
-                f"{param_name}",
-                dict_labels[param_name],
-                default=dict_labels[param_name],
-                key=f"collective_{param_name}",
+        col1, col2 = st.columns(2)
+        with col1:
+            coll_expander_1 = st.expander("Parameter select")
+            coll_columns_1 = coll_expander_1.multiselect(
+                "Columns to filter",
+                list(labels_df.columns[1:]),
+                default=list(labels_df.columns[1:]),
+                key=f"collective1",
             )
-        coll_form.form_submit_button("Apply")
-
-        labels_df_coll = labels_df.copy(deep=True)
-        for key, value in coll_params.items():
-            labels_df_coll = labels_df_coll[labels_df_coll[key].isin(value)]
-
-        preds = json.loads(
-            state.pipe.json_predictions_,
-        )
-
-        # QR code
-        if not len(labels_df_coll.index):
-            st.write("Please select al least 1 value for each parameter.")
-        else:
-            qrcode = np.zeros((params["in_ncluster"], params["out_ncluster"]))
-
-            for idx in labels_df_coll.index:
-                preds_df = pd.read_json(preds[idx], orient="columns")
-                freq_ratio_ = params["sampfreq"] // params["down_sampfreq"]
-                considered_ts = file_array[signal_idx][::freq_ratio_]
-                total_duration = len(considered_ts)
-                duration_array = (
-                    np.concatenate(
-                        (preds_df["in_start_index"][1:].to_numpy(), [total_duration])
-                    )
-                    - preds_df["in_start_index"].to_numpy()
+            coll_expander_1.write("Please select to features to keep below:")
+            coll_params_1 = {}
+            coll_form_1 = coll_expander_1.form("collective1")
+            for param_name in coll_columns_1:
+                coll_params_1[param_name] = coll_form_1.multiselect(
+                    f"{param_name}",
+                    dict_labels[param_name],
+                    default=dict_labels[param_name],
+                    key=f"collective1_{param_name}",
                 )
-                for idx_in, idx_out, duration in zip(
-                    preds_df["in_cluster"], preds_df["out_cluster"], duration_array
-                ):
-                    if idx_in != -1 and idx_out != -1:
-                        qrcode[idx_in, idx_out] += duration
+            coll_form_1.form_submit_button("Apply")
 
-            qrcode /= np.sum(qrcode)
-            in_labels = [
-                chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])
-            ]
-            out_labels = list(range(params["out_ncluster"]))
-            qrcode_plot(in_labels, out_labels, qrcode)
+            labels_df_coll_1 = labels_df.copy(deep=True)
+            for key, value in coll_params_1.items():
+                labels_df_coll_1 = labels_df_coll_1[labels_df_coll_1[key].isin(value)]
 
+            preds = json.loads(
+                state.pipe.json_predictions_,
+            )
+
+            # QR code
+            if not len(labels_df_coll_1.index):
+                st.write("Please select al least 1 value for each parameter.")
+            else:
+                qrcode = np.zeros((params["in_ncluster"], params["out_ncluster"]))
+
+                for idx in labels_df_coll_1.index:
+                    preds_df = pd.read_json(preds[idx], orient="columns")
+                    freq_ratio_ = params["sampfreq"] // params["down_sampfreq"]
+                    considered_ts = file_array[signal_idx][::freq_ratio_]
+                    total_duration = len(considered_ts)
+                    duration_array = (
+                        np.concatenate(
+                            (
+                                preds_df["in_start_index"][1:].to_numpy(),
+                                [total_duration],
+                            )
+                        )
+                        - preds_df["in_start_index"].to_numpy()
+                    )
+                    for idx_in, idx_out, duration in zip(
+                        preds_df["in_cluster"], preds_df["out_cluster"], duration_array
+                    ):
+                        if idx_in != -1 and idx_out != -1:
+                            qrcode[idx_in, idx_out] += duration
+
+                qrcode /= np.sum(qrcode)
+                in_labels = [
+                    chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])
+                ]
+                out_labels = list(range(params["out_ncluster"]))
+                qrcode_plot(in_labels, out_labels, qrcode)
+        with col2:
+            coll_expander = st.expander("Parameter select")
+            coll_columns = coll_expander.multiselect(
+                "Columns to filter",
+                list(labels_df.columns[1:]),
+                default=list(labels_df.columns[1:]),
+                key=f"collective",
+            )
+            coll_expander.write("Please select to features to keep below:")
+            coll_params = {}
+            coll_form = coll_expander.form("collective")
+            for param_name in coll_columns:
+                coll_params[param_name] = coll_form.multiselect(
+                    f"{param_name}",
+                    dict_labels[param_name],
+                    default=dict_labels[param_name],
+                    key=f"collective_{param_name}",
+                )
+            coll_form.form_submit_button("Apply")
+
+            labels_df_coll = labels_df.copy(deep=True)
+            for key, value in coll_params.items():
+                labels_df_coll = labels_df_coll[labels_df_coll[key].isin(value)]
+
+            preds = json.loads(
+                state.pipe.json_predictions_,
+            )
+
+            # QR code
+            if not len(labels_df_coll.index):
+                st.write("Please select al least 1 value for each parameter.")
+            else:
+                qrcode = np.zeros((params["in_ncluster"], params["out_ncluster"]))
+
+                for idx in labels_df_coll.index:
+                    preds_df = pd.read_json(preds[idx], orient="columns")
+                    freq_ratio_ = params["sampfreq"] // params["down_sampfreq"]
+                    considered_ts = file_array[signal_idx][::freq_ratio_]
+                    total_duration = len(considered_ts)
+                    duration_array = (
+                        np.concatenate(
+                            (
+                                preds_df["in_start_index"][1:].to_numpy(),
+                                [total_duration],
+                            )
+                        )
+                        - preds_df["in_start_index"].to_numpy()
+                    )
+                    for idx_in, idx_out, duration in zip(
+                        preds_df["in_cluster"], preds_df["out_cluster"], duration_array
+                    ):
+                        if idx_in != -1 and idx_out != -1:
+                            qrcode[idx_in, idx_out] += duration
+
+                qrcode /= np.sum(qrcode)
+                in_labels = [
+                    chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])
+                ]
+                out_labels = list(range(params["out_ncluster"]))
+                qrcode_plot(in_labels, out_labels, qrcode)
         # maybe create a function for qr codes formatting?
 
 
