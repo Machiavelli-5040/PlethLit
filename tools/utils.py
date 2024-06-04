@@ -147,3 +147,75 @@ def qrcode_plot(
         fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
     st.plotly_chart(fig)
     return fig
+
+
+def custom_multiselect(
+    df: pd.DataFrame,
+    labels: dict,
+    expander_name: str,
+    key: str,
+) -> pd.DataFrame:
+
+    expander = st.expander(f"{expander_name}")
+
+    form_col = expander.form(f"{key}_columns")
+    columns = form_col.multiselect(
+        "Columns to filter",
+        list(df.columns[1:]),
+        default=list(df.columns[1:]),
+        key=f"{key}",
+    )
+    form_col.form_submit_button("Apply columns")
+
+    expander.write("Please select the features to keep below:")
+
+    params = {}
+    form_params = expander.form(f"{key}_labels")
+    for param_name in columns:
+        params[param_name] = form_params.multiselect(
+            f"{param_name}",
+            labels[param_name],
+            default=labels[param_name],
+            key=f"{key}_{param_name}",
+        )
+    form_params.form_submit_button("Apply labels")
+
+    df_copy = df.copy(deep=True)
+    for key, value in params.items():
+        df_copy = df_copy[df_copy[key].isin(value)]
+
+    return df_copy
+
+
+def custom_qrcode(
+    predictions,
+    params: dict,
+    file_array,
+    idx_list,
+):
+    qrcode = np.zeros((params["in_ncluster"], params["out_ncluster"]))
+
+    for idx in idx_list:
+        preds_df = pd.read_json(predictions[idx], orient="columns")
+        freq_ratio_ = params["sampfreq"] // params["down_sampfreq"]
+        considered_ts = file_array[idx][::freq_ratio_]
+        total_duration = len(considered_ts)
+        duration_array = (
+            np.concatenate(
+                (
+                    preds_df["in_start_index"][1:].to_numpy(),
+                    [total_duration],
+                )
+            )
+            - preds_df["in_start_index"].to_numpy()
+        )
+        for idx_in, idx_out, duration in zip(
+            preds_df["in_cluster"], preds_df["out_cluster"], duration_array
+        ):
+            if idx_in != -1 and idx_out != -1:
+                qrcode[idx_in, idx_out] += duration
+
+    qrcode /= np.sum(qrcode)
+    in_labels = [chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])]
+    out_labels = list(range(params["out_ncluster"]))
+    qrcode_plot(in_labels, out_labels, qrcode)
