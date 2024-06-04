@@ -215,7 +215,7 @@ with tab_1:
                         fig.add_trace(i, row=idx + 1, col=1)
                 for i, s in enumerate(["in", "out"]):
                     next(fig.select_yaxes(row=2 + i, col=1)).update(
-                        labelalias={"1": f"{s}"}
+                        labelalias={1: f"{s}"}
                     )
                 fig.update_xaxes(range=[0, len(considered_ts)])
                 st.plotly_chart(fig)
