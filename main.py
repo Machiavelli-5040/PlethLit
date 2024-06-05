@@ -11,8 +11,9 @@ from streamlit import session_state as state
 from tools.pipeline import Pipeline
 from tools.utils import (
     custom_multiselect,
-    custom_qrcode,
-    qrcode_plot,
+    get_duration_array,
+    get_qrcode_fig,
+    get_qrcode_values,
     symbolic_representation,
 )
 from upload_data.data import from_zip_dataset_to_numpy
@@ -176,13 +177,7 @@ with tab_1:
             except TypeError:
                 st.write("Please select al least 1 value for each parameter.")
             else:
-                total_duration = len(considered_ts)
-                duration_array = (
-                    np.concatenate(
-                        (preds_df["in_start_index"][1:].to_numpy(), [total_duration])
-                    )
-                    - preds_df["in_start_index"].to_numpy()
-                )
+                duration_array = get_duration_array(preds_df, len(considered_ts))
 
                 # Signal visualization
                 fig_in, fig_out = symbolic_representation(
@@ -207,18 +202,20 @@ with tab_1:
                 st.plotly_chart(fig)
 
                 # QR code
-                qrcode = np.zeros((params["in_ncluster"], params["out_ncluster"]))
-                for idx_in, idx_out, duration in zip(
-                    preds_df["in_cluster"], preds_df["out_cluster"], duration_array
-                ):
-                    if idx_in != -1 and idx_out != -1:
-                        qrcode[idx_in, idx_out] += duration
-                qrcode /= np.sum(qrcode)
-                in_labels = [
-                    chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])
-                ]
-                out_labels = list(range(params["out_ncluster"]))
-                qrcode_plot(in_labels, out_labels, qrcode)
+                qrcode, n_outliers, n_values = get_qrcode_values(
+                    preds,
+                    params["in_ncluster"],
+                    params["out_ncluster"],
+                    duration_array,
+                    [signal_idx],
+                )
+                qrcode_fig = get_qrcode_fig(
+                    params["in_ncluster"], params["out_ncluster"], qrcode
+                )
+                st.plotly_chart(qrcode_fig)
+                st.write(
+                    f"Outliers: {n_outliers} out of {n_values} predictions ({100*n_outliers/n_values:.1f}%)"
+                )
 
 
 # Collective ===================================================================
@@ -233,24 +230,51 @@ with tab_2:
         preds = json.loads(
             state.pipe.json_predictions_,
         )
-        col1, col2 = st.columns(2)
-        with col1:
+        col_1, col_2 = st.columns(2)
+
+        with col_1:
             labels_df_coll_1 = custom_multiselect(
                 labels_df, dict_labels, "Parameter select", "coll_1"
             )
             if not len(labels_df_coll_1.index):
                 st.write("Please select al least 1 value for each parameter.")
             else:
-                custom_qrcode(preds, params, file_array, labels_df_coll_1.index)
+                qrcode_1, n_outliers_1, n_values_1 = get_qrcode_values(
+                    preds,
+                    params["in_ncluster"],
+                    params["out_ncluster"],
+                    duration_array,
+                    labels_df_coll_1.index,
+                )
+                qrcode_fig_1 = get_qrcode_fig(
+                    params["in_ncluster"], params["out_ncluster"], qrcode_1
+                )
+                st.plotly_chart(qrcode_fig_1)
+                st.write(
+                    f"Outliers: {n_outliers_1} out of {n_values_1} predictions ({100*n_outliers_1/n_values_1:.1f}%)"
+                )
 
-        with col2:
+        with col_2:
             labels_df_coll_2 = custom_multiselect(
                 labels_df, dict_labels, "Parameter select", "coll_2"
             )
             if not len(labels_df_coll_2.index):
                 st.write("Please select al least 1 value for each parameter.")
             else:
-                custom_qrcode(preds, params, file_array, labels_df_coll_2.index)
+                qrcode_2, n_outliers_2, n_values_2 = get_qrcode_values(
+                    preds,
+                    params["in_ncluster"],
+                    params["out_ncluster"],
+                    duration_array,
+                    labels_df_coll_2.index,
+                )
+                qrcode_fig_2 = get_qrcode_fig(
+                    params["in_ncluster"], params["out_ncluster"], qrcode_2
+                )
+                st.plotly_chart(qrcode_fig_2)
+                st.write(
+                    f"Outliers: {n_outliers_2} out of {n_values_2} predictions ({100*n_outliers_2/n_values_2:.1f}%)"
+                )
 
 
 # Representative cycles ========================================================
@@ -260,4 +284,4 @@ with tab_3:
     if state.pipe is None:
         st.write("Please run the demonstration first to output results here.")
     else:
-        st.plotly_chart(state.pipe.plot_medoid(), theme=None)
+        st.plotly_chart(state.pipe.plot_medoid())

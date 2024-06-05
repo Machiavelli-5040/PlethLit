@@ -115,40 +115,6 @@ def symbolic_representation(
     return fig_in, fig_out
 
 
-def qrcode_plot(
-    in_labels,
-    out_labels,
-    qrcode,
-    showaxis=True,
-    showscale=True,
-    margin=True,
-    width=400,
-):
-    fig = go.Figure()
-    fig.add_trace(
-        go.Heatmap(
-            x=out_labels,
-            y=in_labels,
-            z=qrcode,
-            zmin=0,
-            showscale=showscale,
-            colorscale="viridis",
-        )
-    )
-    fig.update_yaxes(autorange="reversed", visible=showaxis)
-    fig.update_xaxes(side="top", visible=showaxis)
-    fig.update_layout(
-        hovermode="closest",
-        width=width,
-        height=width,
-    )
-
-    if not margin:
-        fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
-    st.plotly_chart(fig)
-    return fig
-
-
 def custom_multiselect(
     df: pd.DataFrame,
     labels: dict,
@@ -187,35 +153,72 @@ def custom_multiselect(
     return df_copy
 
 
-def custom_qrcode(
+def get_duration_array(predictions, total_duration):
+    return (
+        np.concatenate((predictions["in_start_index"][1:].to_numpy(), [total_duration]))
+        - predictions["in_start_index"].to_numpy()
+    )
+
+
+def get_qrcode_values(
     predictions,
-    params: dict,
-    file_array,
+    in_ncluster,
+    out_ncluster,
+    duration_array,
     idx_list,
 ):
-    qrcode = np.zeros((params["in_ncluster"], params["out_ncluster"]))
+    qrcode = np.zeros((in_ncluster, out_ncluster))
+    n_outliers, n_values = 0, 0
 
     for idx in idx_list:
         preds_df = pd.read_json(predictions[idx], orient="columns")
-        freq_ratio_ = params["sampfreq"] // params["down_sampfreq"]
-        considered_ts = file_array[idx][::freq_ratio_]
-        total_duration = len(considered_ts)
-        duration_array = (
-            np.concatenate(
-                (
-                    preds_df["in_start_index"][1:].to_numpy(),
-                    [total_duration],
-                )
-            )
-            - preds_df["in_start_index"].to_numpy()
-        )
+        n_values += len(preds_df)
         for idx_in, idx_out, duration in zip(
             preds_df["in_cluster"], preds_df["out_cluster"], duration_array
         ):
             if idx_in != -1 and idx_out != -1:
                 qrcode[idx_in, idx_out] += duration
+            else:
+                n_outliers += 1
 
     qrcode /= np.sum(qrcode)
-    in_labels = [chr(x) for x in range(ord("A"), ord("A") + params["in_ncluster"])]
-    out_labels = list(range(params["out_ncluster"]))
-    qrcode_plot(in_labels, out_labels, qrcode)
+    return qrcode, n_outliers, n_values
+
+
+def get_qrcode_fig(
+    in_ncluster,
+    out_ncluster,
+    qrcode,
+    showaxis=True,
+    showscale=True,
+    margin=True,
+    width=400,
+):
+    in_labels = [chr(x) for x in range(ord("A"), ord("A") + in_ncluster)]
+    out_labels = list(range(out_ncluster))
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Heatmap(
+            x=out_labels,
+            y=in_labels,
+            z=qrcode,
+            zmin=0,
+            showscale=showscale,
+            colorscale="viridis",
+            text=qrcode,
+            texttemplate="%{text:.3f}",
+            hoverinfo="skip",
+        )
+    )
+    fig.update_yaxes(autorange="reversed", visible=showaxis)
+    fig.update_xaxes(side="top", visible=showaxis)
+    fig.update_layout(
+        hovermode="closest",
+        width=width,
+        height=width,
+    )
+
+    if not margin:
+        fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+    return fig
