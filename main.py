@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 from streamlit import session_state as state
+import matplotlib
 
 from tools.pipeline import Pipeline
 from tools.utils import (
@@ -18,6 +19,7 @@ from tools.utils import (
     symbolic_representation,
 )
 from upload_data.data import from_zip_dataset_to_numpy
+
 
 st.set_page_config(layout="wide")
 st.title(
@@ -178,7 +180,7 @@ with tab_1:
                 st.write("Please select al least 1 value for each parameter.")
             else:
                 duration_array = get_duration_array(preds_df, len(considered_ts))
-
+                st.subheader("Time line representation of respiratory cycle categories (bar codes)")
                 # Signal visualization
                 fig_in, fig_out = symbolic_representation(
                     preds_df["in_cluster"],
@@ -202,6 +204,7 @@ with tab_1:
                 st.plotly_chart(fig)
 
                 # QR code
+                st.subheader("Respiratory cycle (RC) map")
                 qrcode, n_outliers, n_values = get_qrcode_values(
                     preds,
                     params["in_ncluster"],
