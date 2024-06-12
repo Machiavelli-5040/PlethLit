@@ -242,6 +242,7 @@ with tab_2:
             if not len(labels_df_coll_1.index):
                 st.write("Please select al least 1 value for each parameter.")
             else:
+                st.subheader("RC map 1")
                 qrcode_1, n_outliers_1, n_values_1 = get_qrcode_values(
                     preds,
                     params["in_ncluster"],
@@ -264,6 +265,7 @@ with tab_2:
             if not len(labels_df_coll_2.index):
                 st.write("Please select al least 1 value for each parameter.")
             else:
+                st.subheader("RC map 2")
                 qrcode_2, n_outliers_2, n_values_2 = get_qrcode_values(
                     preds,
                     params["in_ncluster"],
