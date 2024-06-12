@@ -243,8 +243,8 @@ class Pipeline(object):
         fig = make_subplots(
             rows=self.in_ncluster,
             cols=self.out_ncluster,
-            shared_xaxes="all",
-            shared_yaxes="all",
+            shared_xaxes=True,
+            shared_yaxes=True,
             x_title="time (s)",
             subplot_titles=[f"<b>{i}</b>" for i in np.arange(self.out_ncluster)],
             horizontal_spacing=0.02,
@@ -253,7 +253,8 @@ class Pipeline(object):
 
         for i in range(self.in_ncluster):
             for j in range(self.out_ncluster):
-                if idx[i, j] != -1:
+                # if idx[i, j] != -1:
+                if i < 1:
                     ts_in = X_in[idx[i, j]].reshape(-1)
                     ts_out = X_out[idx[i, j]].reshape(-1)
                     ts_in = np.hstack((ts_in, ts_out[0]))
@@ -281,6 +282,15 @@ class Pipeline(object):
                         row=i + 1,
                         col=j + 1,
                     )
+                else:
+                    fig.add_annotation(
+                        text=f"No matching cycle<br>found in data for<br>cluster {chr(65+i)}{j}.",
+                        font=dict(size=18),
+                        showarrow=False,
+                        row=i + 1,
+                        col=j + 1,
+                    )
+                    next(fig.select_yaxes(row=1 + i, col=j + 1)).update(showgrid=False)
 
         for i, color in enumerate(in_colors):
             next(fig.select_yaxes(row=1 + i, col=1)).update(
