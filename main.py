@@ -1,5 +1,6 @@
 import json
 import zipfile
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -127,8 +128,7 @@ if run:
 
 
 with tab_0:
-    st.write("To do!")
-    st.image("meme.jpg")
+    st.markdown(Path("README.md").read_text(), unsafe_allow_html=True)
 
 
 # Individual ===================================================================
