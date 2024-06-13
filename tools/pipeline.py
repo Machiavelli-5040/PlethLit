@@ -253,8 +253,7 @@ class Pipeline(object):
 
         for i in range(self.in_ncluster):
             for j in range(self.out_ncluster):
-                # if idx[i, j] != -1:
-                if i < 1:
+                if idx[i, j] != -1:
                     ts_in = X_in[idx[i, j]].reshape(-1)
                     ts_out = X_out[idx[i, j]].reshape(-1)
                     ts_in = np.hstack((ts_in, ts_out[0]))
