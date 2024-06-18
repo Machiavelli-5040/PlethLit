@@ -240,7 +240,6 @@ with tab_1:
                         labelalias={1: f"{s}"}
                     )
                 fig.update_xaxes(range=[0, len(considered_ts)])
-                fig.update_layout(legend=dict(x=-0.1))
                 st.plotly_chart(fig)
 
                 # QR code

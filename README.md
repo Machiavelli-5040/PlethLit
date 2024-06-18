@@ -31,11 +31,15 @@ Once you have clicked on the circled buttons, the advanced research parameters w
 
 ### Parameters selection
 
-The left-hand column is also where you can select the algorithm's parameters. Some parameters are mandatory: for example, you need to enter the sampling frequency you used to make your measurements, the sub-sampling frequency, and the number of clusters desired. Other parameters are optional, you can access them by clicking on the **Advanced Parameters** button.
+The left-hand column is also where you can select the algorithm's parameters. 
+Some parameters are mandatory: for example, you need to enter the sampling frequency you used to make your measurements, the sub-sampling frequency, and the number of clusters desired.
+Other parameters are optional, you can access them by clicking on the **Advanced Parameters** button.
 
 <p align="center">
 <img src= "https://raw.githubusercontent.com/Machiavelli-5040/PlethLit/main/tutorial_images/parameters_example.png" width="50%" />
 </p>
+
+If you have any doubt about the meaning of a parameter, the little helps buttons are there to help.
 
 ### Visualization of the algorithm results
 Once the algorithm has been executed, you'll be able to view several results, divided into three tabs: 
@@ -43,7 +47,7 @@ Once the algorithm has been executed, you'll be able to view several results, di
 #### Individual representation
 The selection of the time series that you want to visualize is done in the same way as explained above in the **Visualization of the data** section. Now, once the wished time series is selected you will have new representations:
 
-**Firstly**, you will see the *Time line representation of respiratory cycle categories*, also called **bar codes**: 
+**Firstly**, you will see the *Volume of air exchanged* computed as an integral of the imput signal and the *Time line representation of respiratory cycle categories*, also called **bar codes**: 
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/Machiavelli-5040/PlethLit/main/tutorial_images/barcode_example.png" width="50%"/>
@@ -58,27 +62,36 @@ You can also zoom in on a portion of the bar code of particular interest to you,
 <img src="https://raw.githubusercontent.com/Machiavelli-5040/PlethLit/main/tutorial_images/barcode_zoomed_example.png" width="50%"/>
 </p>
 
-
-Note that the portions in grey represents outliers that are too far to any typical respiratory cycle, in the examples we used they often corresponds to human manipulations or the death of the mouse.
+Note that the portions in grey represent outliers that are too far from any typical respiratory cycle, or for which the cycle duration is not in the segment defined as a parameter (*Cycle minimum duration (s)*and *Cycle maximum duration (s)*).
 
 **Then**, you will see the RC map of the selected Time-Series:
 *A respiratory cycle (RC) map corresponds to a heat map where rows are inspiration symbols and columns are expiration symbols.*
-![](https://raw.githubusercontent.com/Machiavelli-5040/PlethLit/main/tutorial_images/RCmap_example.png)
 
-For a better idea of what each box represents, see the **Representative respiratory cycles** tab.
+<p align="center">
+<img src="https://raw.githubusercontent.com/Machiavelli-5040/PlethLit/main/tutorial_images/RCmap_example.png" width="50%"/>
+</p>
+
+To have a better idea of what each box represents, see the **Representative respiratory cycles** tab.
 
 #### Collective representation
 
-To be able to see results in the tab labeled **Collective representation**, you also need to have provided the csv file corresponding to your zip archive.
+To be able to see results in the tab labeled **Collective representation**, you also need to have provided the CSV file corresponding to your zip archive.
 
 You will then have access to 2 selectors like the one described above, to be able to build 2 RC maps side-by-side to be able to visualize and compare the results for 2 given subsets of the parameter labels. 
 
-![](https://raw.githubusercontent.com/Machiavelli-5040/PlethLit/main/tutorial_images/collective_parameters_example.png)
-Once the parameters **choosen** and **applied** you will have two RC maps, similars to the one in the tab **Individual representation** with the difference that this time, the map will be done based on **all** the time-series corresponding to the choosen parameters.
+<p align="center">
+<img src="https://raw.githubusercontent.com/Machiavelli-5040/PlethLit/main/tutorial_images/collective_parameters_example.png" width="50%"/>
+</p>
+
+Once the parameters **chosen** and **applied** you will have two RC maps, similar to the one in the tab **Individual representation** with the difference that this time, the map will be done based on **all** the time-series corresponding to the chosen parameters.
 
 
 #### Representative respiratory cycles
 
-To be able to see results in the tab labeled **Representative cycles**, you do not need to provide the csv file corresponding to your zip archive.
+You don't have to upload the CSV file for corresponding to your zip archive in order to see the results in the tab labeled **Representative Cycles**.
 
-You will find in this tab a grid figure displaying the medoids (real data examples closest to the centroids of the clusters) of the respiratory cycles. As before, the letters and numbers correspond to the inhalation and exhalation clusters respectively.
+In this tab, you will find a grid figure that displays the medoids, which are real data examples closest to the centroids of the clusters, for the respiratory cycles. Just like before, the letters and numbers correspond to the inhalation and exhalation clusters respectively.
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/Machiavelli-5040/PlethLit/main/tutorial_images/respiratory_cycles_example.png" width="50%"/>
+</p>
