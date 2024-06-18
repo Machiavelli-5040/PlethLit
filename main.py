@@ -195,7 +195,8 @@ with tab_1:
             except TypeError:
                 st.write("Please select al least 1 value for each parameter.")
             else:
-                # Todo: fetch signal from pipeline to get volume and flux
+                considered_ts = state.pipe.seg_lst[signal_idx].flow_
+                considered_volume = state.pipe.seg_lst[signal_idx].volume_
                 duration_array = get_duration_array(preds_df, len(considered_ts))
                 st.subheader(
                     "Time line representation of respiratory cycle categories (bar codes)"
@@ -210,19 +211,36 @@ with tab_1:
                 )
 
                 fig = make_subplots(
-                    rows=3, cols=1, shared_xaxes=True, vertical_spacing=0
+                    rows=4, cols=1, shared_xaxes=True, vertical_spacing=0
                 )
-                for idx, subfig in enumerate([fig_signal, fig_in, fig_out]):
+                fig.add_trace(
+                    go.Scatter(
+                        x=list(range(len(considered_ts))),
+                        y=considered_ts,
+                        name="flow",
+                    ),
+                    row=1,
+                    col=1,
+                )
+                fig.add_trace(
+                    go.Scatter(
+                        x=list(range(len(considered_volume))),
+                        y=considered_volume,
+                        name="volume",
+                    ),
+                    row=2,
+                    col=1,
+                )
+                for idx, subfig in enumerate([fig_in, fig_out]):
                     for i in subfig.data:
-                        fig.add_trace(i, row=idx + 1, col=1)
-
-                # Todo: add volume fig
+                        fig.add_trace(i, row=idx + 3, col=1)
 
                 for i, s in enumerate(["inspiration", "expiration"]):
-                    next(fig.select_yaxes(row=2 + i, col=1)).update(
+                    next(fig.select_yaxes(row=3 + i, col=1)).update(
                         labelalias={1: f"{s}"}
                     )
                 fig.update_xaxes(range=[0, len(considered_ts)])
+                fig.update_layout(legend=dict(x=-0.1))
                 st.plotly_chart(fig)
 
                 # QR code
