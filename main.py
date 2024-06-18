@@ -78,13 +78,13 @@ form.write("Choose parameters")
 
 # Basic parameters
 params["sampfreq"] = form.number_input(
-    "Sampling frequency", step=100, value=2000, help="test"
+    "Sampling frequency", step=100, value=2000, help="Please ensure that the sampling frequency matches the frequency used for your data measurements."
 )
 params["down_sampfreq"] = form.number_input(
-    "Downsampling frequency", step=50, value=250
+    "Downsampling frequency", step=50, value=250, help="Downsampling can be particularly useful for very long signals."
 )
 params["in_ncluster"] = form.slider(
-    "Number of inspiration clusters", min_value=1, max_value=5, value=3, help="test2"
+    "Number of inspiration clusters", min_value=1, max_value=5, value=3
 )
 params["out_ncluster"] = form.slider(
     "Number of expiration clusters", min_value=1, max_value=5, value=3
@@ -98,38 +98,39 @@ params["prominence"] = expander.number_input(
     help="Minimum of inhaled air volume during a respiratory cycle (mL)",
 )
 params["wlen"] = expander.number_input(
-    "Prominence search window length (s)", step=1, value=2
+    "Prominence search window length(s)", step=1, value=2 , help="Window length used to compute the prominence."
 )
 params["cycle_minimum_duration"] = expander.number_input(
-    "Cycle minimum duration (s)", step=0.1, value=0.1
+    "Cycle minimum duration (s)", step=0.1, value=0.1, help="Minimum duration of a respiratory cycle."
 )
 params["cycle_maximum_duration"] = expander.number_input(
-    "Cycle maximum duration (s)", step=0.1, value=1.0
+    "Cycle maximum duration (s)", step=0.1, value=1.0, help="Maximum duration of a respiratory cycle."
 )
-params["interval"] = expander.number_input("Interval length (s)", step=1, value=60)
 params["training_size_per_interval"] = expander.number_input(
     "Number of cycles per interval",
     step=1,
     value=30,
-    help="Number of respiratory cycles sampled within an interval",
+    help="Number of respiratory cycles sampled within an interval for the training.",
 )
+params["interval"] = expander.number_input("Interval length (s)", step=1, value=60 ,help="Duration of the interval considered for the parameter above.")
+
 params["in_centroid_duration"] = expander.number_input(
-    "Mean inspiration duration (s)",
+    "Average inspiration duration (s)",
     step=0.1,
-    value=0.3,
+    value=0.3, help="Must be an approximation of the average duration of an inspiration."
 )
 params["out_centroid_duration"] = expander.number_input(
-    "Mean expiration duration (s)",
+    "Average expiration duration (s)",
     step=0.1,
-    value=0.3,
+    value=0.3, help="Must be an approximation of the average duration of an expiration."
 )
 params["radius"] = expander.number_input(
-    "Max warping/radius (s)", step=0.01, value=0.06, min_value=0.0, max_value=1.0
+    "Max warping radius (s)", step=0.01, value=0.06, min_value=0.0, max_value=1.0 ,help="A DTW parameter; a higher value allows more temporal distortions in the calculation of the DTW."
 )
 params["quantile_threshold"] = expander.number_input(
-    "Quantile threshold", step=0.01, value=0.99, min_value=0.0, max_value=1.0
+    "Quantile threshold", step=0.01, value=0.99, min_value=0.0, max_value=1.0 , help="The threshold that determines the percentage of samples to be kept and the percentage that is considered an outlier."
 )
-params["n_iteration"] = expander.number_input("Number of iterations", step=1, value=10)
+params["n_iteration"] = expander.number_input("Number of iterations", step=1, value=10 , help="Number of iterations of the algorithm.")
 form.form_submit_button("Apply parameters")  # Save parameters
 run = st.sidebar.button("Run")  # Run experiment
 
@@ -147,7 +148,6 @@ if run:
 
 with tab_0:
     st.markdown(Path("README.md").read_text(), unsafe_allow_html=True)
-
 
 # Individual ===================================================================
 
