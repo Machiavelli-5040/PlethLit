@@ -243,8 +243,8 @@ class Pipeline(object):
         fig = make_subplots(
             rows=self.in_ncluster,
             cols=self.out_ncluster,
-            shared_xaxes=True,
-            shared_yaxes=True,
+            shared_xaxes="all",
+            shared_yaxes="all",
             x_title="time (s)",
             subplot_titles=[f"<b>{i}</b>" for i in np.arange(self.out_ncluster)],
             horizontal_spacing=0.02,
@@ -283,11 +283,15 @@ class Pipeline(object):
                     )
                 else:
                     fig.add_annotation(
-                        text=f"No matching cycle<br>found in data for<br>cluster {chr(65+i)}{j}.",
+                        text=f"{chr(65+i)}{j} does<br>not exist",
                         font=dict(size=18),
                         showarrow=False,
                         row=i + 1,
                         col=j + 1,
+                        # xref=f"x{i+1}",
+                        # yref=f"y{j+1}",
+                        x=0.1,
+                        y=0,
                     )
                     next(fig.select_yaxes(row=1 + i, col=j + 1)).update(showgrid=False)
 

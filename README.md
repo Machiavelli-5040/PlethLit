@@ -34,7 +34,7 @@ The selection of the Time-Series that you want to visualize is done in the exact
 
 **Firstly**, you will see the *Time line representation of respiratory cycle categories*, also called **bar codes**: 
 
-![](https://raw.githubusercontent.com/Machiavelli-5040/PlethLit/main/tutorial_images/barcode_example.png)
+<img src="https://raw.githubusercontent.com/Machiavelli-5040/PlethLit/main/tutorial_images/barcode_example.png" width="50%"/>
 
 You can also zoom on a portion of the bar code of particular interest to you, to see what's going on in more detail.
 

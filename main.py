@@ -2,13 +2,13 @@ import json
 import zipfile
 from pathlib import Path
 
+import matplotlib
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 from streamlit import session_state as state
-import matplotlib
 
 from tools.pipeline import Pipeline
 from tools.utils import (
@@ -19,7 +19,6 @@ from tools.utils import (
     symbolic_representation,
 )
 from upload_data.data import from_zip_dataset_to_numpy
-
 
 st.set_page_config(layout="wide")
 st.title(
@@ -76,44 +75,61 @@ params["njobs"] = 1
 params["verbose"] = True
 form = st.sidebar.form("parameters")
 form.write("Choose parameters")
+
 # Basic parameters
-params["sampfreq"] = form.number_input("Sampling frequency", step=100, value=2000)
+params["sampfreq"] = form.number_input(
+    "Sampling frequency", step=100, value=2000, help="test"
+)
 params["down_sampfreq"] = form.number_input(
     "Downsampling frequency", step=50, value=250
 )
 params["in_ncluster"] = form.slider(
-    "Number of inhalation clusters", min_value=1, max_value=5, value=3
+    "Number of inspiration clusters", min_value=1, max_value=5, value=3, help="test2"
 )
 params["out_ncluster"] = form.slider(
-    "Number of exhalation clusters", min_value=1, max_value=5, value=3
+    "Number of expiration clusters", min_value=1, max_value=5, value=3
 )
 # Advanced parameters
 expander = form.expander("Advanced parameters")
-params["prominence"] = expander.number_input("Prominence", step=0.01, value=0.03)
-params["wlen"] = expander.number_input("Wlen", step=1, value=2)
+params["prominence"] = expander.number_input(
+    "Prominence",
+    step=0.01,
+    value=0.05,
+    help="Minimum of inhaled air volume during a respiratory cycle (mL)",
+)
+params["wlen"] = expander.number_input(
+    "Prominence search window length (s)", step=1, value=2
+)
 params["cycle_minimum_duration"] = expander.number_input(
-    "Cycle minimum duration", step=0.1, value=0.1
+    "Cycle minimum duration (s)", step=0.1, value=0.1
 )
 params["cycle_maximum_duration"] = expander.number_input(
-    "Cycle maximum duration", step=0.1, value=0.3
+    "Cycle maximum duration (s)", step=0.1, value=1.0
 )
+params["interval"] = expander.number_input("Interval length (s)", step=1, value=60)
 params["training_size_per_interval"] = expander.number_input(
-    "Training size per interval", step=1, value=30
+    "Number of cycles per interval",
+    step=1,
+    value=30,
+    help="Number of respiratory cycles sampled within an interval",
 )
-params["interval"] = expander.number_input("Interval", step=1, value=60)
 params["in_centroid_duration"] = expander.number_input(
-    "In centroid duration", step=0.1, value=0.2
+    "Mean inspiration duration (s)",
+    step=0.1,
+    value=0.3,
 )
 params["out_centroid_duration"] = expander.number_input(
-    "Out centroid duration", step=0.1, value=0.2
+    "Mean expiration duration (s)",
+    step=0.1,
+    value=0.3,
 )
-params["n_iteration"] = expander.number_input("Number of iterations", step=1, value=10)
 params["radius"] = expander.number_input(
-    "Max warping/radius", step=0.01, value=0.06, min_value=0.0, max_value=1.0
+    "Max warping/radius (s)", step=0.01, value=0.06, min_value=0.0, max_value=1.0
 )
 params["quantile_threshold"] = expander.number_input(
-    "Quantile threshold", step=0.01, value=0.95, min_value=0.0, max_value=1.0
+    "Quantile threshold", step=0.01, value=0.99, min_value=0.0, max_value=1.0
 )
+params["n_iteration"] = expander.number_input("Number of iterations", step=1, value=10)
 form.form_submit_button("Apply parameters")  # Save parameters
 run = st.sidebar.button("Run")  # Run experiment
 
@@ -179,8 +195,11 @@ with tab_1:
             except TypeError:
                 st.write("Please select al least 1 value for each parameter.")
             else:
+                # Todo: fetch signal from pipeline to get volume and flux
                 duration_array = get_duration_array(preds_df, len(considered_ts))
-                st.subheader("Time line representation of respiratory cycle categories (bar codes)")
+                st.subheader(
+                    "Time line representation of respiratory cycle categories (bar codes)"
+                )
                 # Signal visualization
                 fig_in, fig_out = symbolic_representation(
                     preds_df["in_cluster"],
@@ -196,7 +215,10 @@ with tab_1:
                 for idx, subfig in enumerate([fig_signal, fig_in, fig_out]):
                     for i in subfig.data:
                         fig.add_trace(i, row=idx + 1, col=1)
-                for i, s in enumerate(["in", "out"]):
+
+                # Todo: add volume fig
+
+                for i, s in enumerate(["inspiration", "expiration"]):
                     next(fig.select_yaxes(row=2 + i, col=1)).update(
                         labelalias={1: f"{s}"}
                     )
