@@ -288,8 +288,6 @@ class Pipeline(object):
                         showarrow=False,
                         row=i + 1,
                         col=j + 1,
-                        # xref=f"x{i+1}",
-                        # yref=f"y{j+1}",
                         x=0.1,
                         y=0,
                     )
